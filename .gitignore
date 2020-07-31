@@ -1,0 +1,12 @@
+# ignore generals
+.idea
+
+# ignored directories
+var/
+
+# ignored files
+test*
+
+# ignored packages
+php/
+composer.phar

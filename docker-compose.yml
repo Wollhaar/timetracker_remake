@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+    webserver:
+        image: php:7.2-apache
+        hostname: localhost
+        ports:
+          - 8080:80
+        volumes:
+          - "./src:/var/www/html"
+        build:
+          context: .
+          dockerfile: Dockerfile
+
+    database:
+        image: mysql
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+          MYSQL_ROOT_PASSWORD: p123
+          MYSQL_USER: david
+          MYSQL_PASSWORD: p123
+          MYSQL_DATABASE: timetracking
