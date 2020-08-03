@@ -1,6 +1,9 @@
 <?php
 #include '/usr/share/nmap/nmap-services';
-echo "TEST";
+
+$response = new \DavidGoraj\backend\handle\Response(new \DavidGoraj\backend\handle\Request());
+
+echo json_encode($response);
 ?>
 
 <!doctype html>

@@ -3,10 +3,18 @@
 
 # ignored directories
 var/
+vendor/
 
 # ignored files
 test*
 
 # ignored packages
+# php
 php/
+configure.bat
+configure.js
+run-tests.php
+
+#composer
 composer.phar
+composer.lock

@@ -1,0 +1,6 @@
+0.1.0:
+    - Added CHANGELOG to project
+    - Added backend to project with Classes Authentication, Database, Request, Response
+
+Next:
+    - Adjusting composer to install autoloader in vendor
