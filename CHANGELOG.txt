@@ -2,5 +2,14 @@
     - Added CHANGELOG to project
     - Added backend to project with Classes Authentication, Database, Request, Response
 
+0.1.1:
+    - Adjusted composer to install autoloader in vendor
+    - Created Session
+    - Modified Authentication
+    - Added Frontend to project
+    - Created Frontpage
+    - Created javascript main file
+
 Next:
-    - Adjusting composer to install autoloader in vendor
+    - javascript content load over Ajax
+    - Timeloading- / Setting

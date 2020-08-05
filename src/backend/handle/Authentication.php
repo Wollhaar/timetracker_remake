@@ -19,9 +19,23 @@ class Authentication
         $this->createAuthSession();
     }
 
-    public function createAuthSession(): void
+    /**
+     * @return null
+     */
+    public function getToken()
     {
-        session_start();
+        return $this->token;
+    }
+
+
+    public function createAuthSession()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            $session = new Session();
+            if (!$session) {
+                return 'Session failed';
+            }
+        }
 
         $this->token = uniqid();
         $_SESSION['AUTH_TOKEN'] = $this->token;
@@ -43,8 +57,8 @@ class Authentication
 
         if ((
                 empty($this->credentials['username']) ||
-                empty($this->credentials['username'])) &&
-            empty($this->credentials['username'])
+                empty($this->credentials['email'])) &&
+            empty($this->credentials['password'])
         )
         {
             throw Exception('Error:Credentials are missing');
