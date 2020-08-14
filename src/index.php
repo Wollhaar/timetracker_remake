@@ -1,7 +1,11 @@
 <?php
+use DavidGoraj\backend\Helper\Controller\Handler;
 
-if (session_status() === PHP_SESSION_ACTIVE) {
-    $session = new RequestController();
-}
+require 'config.php';
+
+if (isset($_GET) || isset($_POST)) $request = $_REQUEST;
+
+if (!is_string($request)) $request = json_encode(array_merge_recursive($_REQUEST, Array('load' => 'content', 'nix')));
+//$handle = Handler::handleRequest($request);
 
 include 'frontend/frontpage.html';

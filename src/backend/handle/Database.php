@@ -6,7 +6,7 @@ namespace DavidGoraj\backend\handle;
 
 class Database
 {
-    const host = 'localhost';
+    const host = 'database';
     const port = '3306';
     const database = 'timetracking';
     const user = 'david';

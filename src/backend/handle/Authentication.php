@@ -10,8 +10,6 @@ class Authentication
     private $user = array();
 
     private $auth = false;
-    private $token = null;
-
     private $db_Conn;
 
     public function __construct()
@@ -19,27 +17,9 @@ class Authentication
         $this->createAuthSession();
     }
 
-    /**
-     * @return null
-     */
-    public function getToken()
-    {
-        return $this->token;
-    }
-
-
     public function createAuthSession()
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            $session = new Session();
-            if (!$session) {
-                return 'Session failed';
-            }
-        }
-
-        $this->token = uniqid();
-        $_SESSION['AUTH_TOKEN'] = $this->token;
-
+        Session::createSession();
         $this->db_Conn = new Database();
     }
 
@@ -84,6 +64,8 @@ class Authentication
             $sql = "SELECT * FROM `users` WHERE email = ? AND password = ? LIMIT 1";
             }
 
+            $password = password_hash($password, PASSWORD_BCRYPT);
+
             if (is_string($sql)) {
                 $stmt = $this->db_Conn->mysqli_prepare($sql);
                 $stmt->mysqli_stmt_bind_param('s', $user ? $user : $email);
@@ -95,7 +77,7 @@ class Authentication
                         $user == $res['username'] ||
                         $email == $res['email']
                     ) &&
-                    $password == $res['password']
+                    password_verify($password, $res['password'])
                 )
                 {
                     $this->user = $res;
@@ -110,3 +92,30 @@ class Authentication
         return false;
     }
 }
+
+$auth = new Authentication();
+echo json_encode($auth);
+
+"CREATE TABLE `timetracking`.`users` ( 
+    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `username` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , 
+    `password` CHAR(60) NOT NULL , 
+    `email` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , 
+    `employee_nr` INT(11) NULL , 
+    `hired` DATE NULL , 
+    `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , 
+    `status` TINYINT(2) NULL , 
+    PRIMARY KEY (`id`) ,
+    UNIQUE `users`(`username`) ,
+    UNIQUE `email`(`email`)
+) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin";
+
+"CREATE TABLE `timetracking`.`user_timestamps` ( 
+    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT , 
+    `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , 
+    `type` TINYINT(2) NULL , 
+    `start_stop` TINYINT(1) NULL , 
+    `user_id` INT(11) UNSIGNED NOT NULL , 
+    PRIMARY KEY (`id`) ,
+    CONSTRAINT `FK_users` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin";

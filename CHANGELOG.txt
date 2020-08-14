@@ -10,6 +10,15 @@
     - Created Frontpage
     - Created javascript main file
 
-Next:
+0.2.0:
     - javascript content load over Ajax
+    - added api for contentload
+    - included libraries jquery, bootstrap, less to project
+    - created templates to project
+    - created Handler to handle Requests
+    - created shell to load frontend-dependencies
+    - created config to load autoloader for api too
+
+next:
     - Timeloading- / Setting
+    - datahandling over api
