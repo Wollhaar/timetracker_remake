@@ -39,7 +39,7 @@ function load_content(section = 'default')
         'content': section
     }, function(data, success) {
         if (success) {
-            setContent(data);
+            setContent(data, section);
         }
         else console.log('Content loading failed');
     });
@@ -127,6 +127,8 @@ function logout()
 
 // --- jquery functions ---
 
-$('.login-area input').on('keyup', function (event) {
+$('.login-area input').keyup(function (event) {
+    console.log('key pressed: ' + event.key);
     if (event.key === 13) login();
 });
+

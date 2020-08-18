@@ -4,7 +4,7 @@ namespace DavidGoraj\backend\handle;
 
 class Session
 {
-    public static function createSession(String $id = null)
+    public static function create(String $id = null)
     {
         session_id($id);
         session_start();
