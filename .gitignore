@@ -20,4 +20,3 @@ run-tests.php
 #composer
 composer.phar
 composer.lock
-src/composer.json

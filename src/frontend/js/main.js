@@ -16,30 +16,30 @@ function setContent(content)
         return;
     }
     console.log('page loaded');
-    $('.wrapper').html(content);
+    $('.wrapper .container').html(content);
 }
 
 function getData(array_element) {
-    return array_element.prototype.forEach(function (keys) {
+    return array_element.forEach(function (key) {
         var array = [];
-        if (typeof array_element[keys] === 'object') {
-            array[$(array_element[keys]).attr('name')] = $(array_element[keys]).val();
+        if (typeof array_element[key] === 'object') {
+            array[$(array_element[key]).attr('name')] = $(array_element[key]).val();
         }
-        if (typeof array_element[keys] === 'string') {
-            var data = array_element[keys].split(':');
+        if (typeof array_element[key] === 'string') {
+            var data = array_element[key].split(':');
             array[data[0]] = data[1];
         }
         return array;
     });
 }
 
-function load_content(section = 'default')
+function load_content(section = 'dashboard')
 {
     $.post('/api/contentLoader.php', {
         'content': section
     }, function(data, success) {
         if (success) {
-            setContent(data);
+            setContent(data, section);
         }
         else console.log('Content loading failed');
     });
@@ -127,6 +127,8 @@ function logout()
 
 // --- jquery functions ---
 
-$('.login-area input').on('keyup', function (event) {
+$('.login-area input').keyup(function (event) {
+    console.log('key pressed: ' + event.key);
     if (event.key === 13) login();
 });
+

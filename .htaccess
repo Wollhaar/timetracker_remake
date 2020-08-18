@@ -1,0 +1,4 @@
+RewriteEngine On
+
+RewriteCond %{} !^$
+RewriteRule ^frontend/$ /frontend/frontpage.html [R=302,L]

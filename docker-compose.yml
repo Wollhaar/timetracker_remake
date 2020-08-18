@@ -6,11 +6,13 @@ services:
         hostname: localhost
         ports:
           - 8080:80
+          - 8090:80
         volumes:
-          - "./src:/var/www/html"
+          - "./src/backend:/var/www/html/backend"
+          - "./src/frontend:/var/www/html/frontend"
         build:
           context: .
-          dockerfile: Dockerfile
+          dockerfile: src/backend/Dockerfile
 
     database:
         image: mysql
