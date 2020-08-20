@@ -89,27 +89,3 @@ class Authentication
 
 $auth = new Authentication();
 echo json_encode($auth);
-
-"CREATE TABLE `timetracking`.`users` ( 
-    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT , 
-    `username` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , 
-    `password` CHAR(60) NOT NULL , 
-    `email` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , 
-    `employee_nr` INT(11) NULL , 
-    `hired` DATE NULL , 
-    `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , 
-    `status` TINYINT(2) NULL , 
-    PRIMARY KEY (`id`) ,
-    UNIQUE `users`(`username`) ,
-    UNIQUE `email`(`email`)
-) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin";
-
-"CREATE TABLE `timetracking`.`user_timestamps` ( 
-    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT , 
-    `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , 
-    `type` TINYINT(2) NULL , 
-    `start_stop` TINYINT(1) NULL , 
-    `user_id` INT(11) UNSIGNED NOT NULL , 
-    PRIMARY KEY (`id`) ,
-    CONSTRAINT `FK_users` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
-) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin";
