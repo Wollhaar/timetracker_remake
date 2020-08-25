@@ -35,7 +35,7 @@ function getData(array_element) {
 
 function load_content(section = 'dashboard')
 {
-    $.post('/api/contentLoader.php', {
+    $.post('http://virtualhosttest:8090/contentLoader.php', {
         'content': section
     }, function(data, success) {
         if (success) {
@@ -48,7 +48,7 @@ function load_content(section = 'dashboard')
 function load_data(data)
 {
     data = JSON.stringify(data);
-    $.post('/api/dataHandler.php', data, function(data, success) {
+    $.post('http://virtualhosttest:8090/dataHandler.php', data, function(data, success) {
         if (success) {
             call_action(data);
         }
