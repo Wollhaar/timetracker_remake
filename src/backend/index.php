@@ -1,5 +1,5 @@
 <?php
-
+echo 'hello';
 require_once 'vendor/autoload.php';
 
 echo \DavidGoraj\backend\handle\Authentication::$auth;
