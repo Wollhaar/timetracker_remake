@@ -1,0 +1,14 @@
+RewriteEngine On
+
+#RewriteCond %{SERVER_PORT} !^8080$
+#RewriteRule ".?" "-" [S=3]
+
+# if not port 8080 skip rewriting
+    RewriteCond %{REQUEST_URI} ^/frontend/?$
+    RewriteRule ^frontend/?$ /frontpage.html [R=302,L,S=2]
+    # skip next two rules
+    RewriteRule ^$ /frontpage.html [R=302,S=1,L]
+
+
+RewriteCond %{REQUEST_URI} !^/backend/?$
+RewriteRule "(.*)" "notfound.php?file=$1&file2=$2&file3=$3"
