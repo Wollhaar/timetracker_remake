@@ -3,10 +3,10 @@
 #if php -r "!file_exists('~/frontend/lib/bootstrap/bootstrap.min.js');"
 #if php -r "!file_exists('~/frontend/lib/bootstrap/popper.min.js');"
 #if php -r "!file_exists('~/frontend/lib/less/less.min.js');"
-mkdir ~/frontend/lib/
-mkdir ~/frontend/lib/jquery
-mkdir ~/frontend/lib/bootstrap
-mkdir ~/frontend/lib/less
+mkdir ./frontend/lib/
+mkdir ./frontend/lib/jquery
+mkdir ./frontend/lib/bootstrap
+mkdir ./frontend/lib/less
 php -r "copy('https://code.jquery.com/jquery-3.5.1.min.js', 'jquery-3.5.1.min.js');"
 mv jquery-3.5.1.min.js ./frontend/lib/jquery/jquery-3.5.1.min.js
 php -r "copy('https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css', 'bootstrap.min.css');"
