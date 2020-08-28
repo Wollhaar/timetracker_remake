@@ -9,15 +9,20 @@ RUN DEBIAN_FRONTEND=noninteractive \
             vim -y \
             wget -y \
             zip -y \
-            npm -y \
+#            npm -y \
             nmap -y \
             git -y
 
 COPY 001-project.conf /etc/apache2/sites-available/001-project.conf
 COPY bin /var/www/html/var/bin
 
-#RUN cd /var/www/html/backend
-#    /var/www/html/var/bin/composer_install.sh;
+#RUN /var/www/html/var/bin/composer_install.sh
 
-RUN nmap localhost || (echo "# Docker Added lines" >> /etc/apache2/apache2.conf && \
-    echo "ServerName localhost" >> /etc/apache2/apache2.conf)
+RUN nmap localhost || (
+    echo -e "# Docker Added lines\n \
+        ServerName localhost\n \
+        ServerName virtualhost\n \
+        ServerName timetracker.de\n \
+        ServerName backend.timetracker.de\n" \
+        >> /etc/apache2/apache2.conf \
+        )

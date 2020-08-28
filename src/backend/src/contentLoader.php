@@ -2,8 +2,6 @@
 use DavidGoraj\backend\Helper\Controller\Handler;
 use DavidGoraj\backend\handle\Request;
 use DavidGoraj\backend\handle\Authentication;
-echo 'hello you';
-die;
 
 require '../config.php';
 
