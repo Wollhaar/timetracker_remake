@@ -1,10 +1,15 @@
 <?php
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS')
+{
+    die();
+}
 echo 'hello';
-require_once 'vendor/autoload.php';
+//require_once 'vendor/autoload.php';
 
-echo \DavidGoraj\backend\handle\Authentication::$auth;
+//echo \DavidGoraj\backend\handle\Authentication::$auth;
 
-require 'config.php';
+//require 'config.php';
 
 if (isset($_GET) || isset($_POST)) $request = $_REQUEST;
 

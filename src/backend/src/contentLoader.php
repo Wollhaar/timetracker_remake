@@ -17,14 +17,14 @@ switch ($post['content']) {
         include 'virtualhosttest:8080/templates/register.html';
         break;
     case 'dashboard':
-        include 'http://virtualhosttest:8080/templates/dashboard.html';
+        include 'timetracker.de:8080/templates/dashboard.html';
         break;
     case 'balance':
         include 'http://virtualhpsttest:8080/templates/balance.html';
         break;
     default:
 //        $user = Authentication::status();
-        include 'http://virtualhosttest:8080/templates/home.html';
+        'localhost:8080/templates/home.html'; // TODO: CURL
 }
-
+echo ' - Content: ' . $post['content'];
 die;
