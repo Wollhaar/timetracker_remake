@@ -35,7 +35,7 @@ function getData(array_element) {
 
 function load_content(section = 'dashboard')
 {
-    $.post('http://backend.timetracker.de:8090/contentLoader.php', {
+    $.post('http://timetracker.de:8080/contentLoader.php', {
         'content': section
     }, function(data, success) {
         if (success) {
