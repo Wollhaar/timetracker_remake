@@ -16,13 +16,11 @@ RUN DEBIAN_FRONTEND=noninteractive \
 COPY 001-project.conf /etc/apache2/sites-available/001-project.conf
 COPY bin /var/www/html/var/bin
 
-RUN /var/www/html/var/bin/composer_install.sh
-
-RUN nmap localhost || \
-    echo -e "# Docker Added lines\n \
-        ServerName localhost\n \
-        ServerName virtualhosttest\n \
-        ServerName timetracker.de\n \
-        ServerName backend.timetracker.de" \
-        >> /etc/apache2/apache2.conf \
+RUN printf "%s\n" \
+        "# Docker Added lines" \
+        "ServerName localhost" \
+        "ServerName virtualhosttest" \
+        "ServerName timetracker.de" \
+        "ServerName backend.timetracker.de" \
+        >> /etc/apache2/apache2.conf
 

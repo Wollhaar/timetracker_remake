@@ -1,13 +1,25 @@
 <?php
 
 
-namespace DavidGoraj\backend\handle;
+namespace DavidGoraj\handle;
 
 
 class Response
 {
-    public function __construct(Request $request)
+    private $data = array();
+
+    public function fill(Array $data, String $purpose = null)
     {
-        return $request;
+        $this->data[$purpose] = $data;
+    }
+
+    public function encode()
+    {
+        $this->data = json_encode($this->data);
+    }
+
+    public function output()
+    {
+        return $this->data;
     }
 }

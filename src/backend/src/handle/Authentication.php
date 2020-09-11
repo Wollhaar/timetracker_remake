@@ -1,7 +1,7 @@
 <?php
 
 
-namespace DavidGoraj\backend\handle;
+namespace DavidGoraj\handle;
 
 
 class Authentication
@@ -85,7 +85,13 @@ class Authentication
         }
         return false;
     }
-}
 
-$auth = new Authentication();
-echo json_encode($auth);
+    public static final function destroy()
+    {
+        self::$user = null;
+        self::$credentials = null;
+        self::$auth = null;
+
+        Session::destroy();
+    }
+}

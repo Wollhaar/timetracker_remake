@@ -1,6 +1,6 @@
 <?php
 
-namespace DavidGoraj\backend\handle;
+namespace DavidGoraj\handle;
 
 class Session
 {
@@ -30,6 +30,22 @@ class Session
 
     public static function id(): string {
         return session_id();
+    }
+
+    /** destroying the session. Source: https://php.net/manual/en/function.session-destroy.php
+     *
+     */
+    public static function destroy()
+    {
+        unset($_SESSION);
+
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
     }
 
     public static function loadTestObject(String $index): Session

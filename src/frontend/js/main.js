@@ -48,7 +48,10 @@ function load_content(section = 'dashboard')
 function load_data(data)
 {
     data = JSON.stringify(data);
-    $.post('http://backend.timetracker.de:8090/dataHandler.php', data, function(data, success) {
+    $.post('http://backend.timetracker.de:8090/dataHandler.php', {
+        action: "login",
+        user: "david"
+    }, function(data, success) {
         if (success) {
             call_action(data);
         }

@@ -1,4 +1,4 @@
-Header always set Access-Control-Allow-Origin "http://timetracker.de:8080"
+Header always set Access-Control-Allow-Origin "*"
 Header always set Access-Control-Origin-Methods "*"
 Header always set Access-Control-Origin-Headers "*"
 
@@ -7,7 +7,7 @@ RewriteEngine On
 
 RewriteCond %{SERVER_PORT} ^8090$ [OR]
 RewriteCond %{HTTP_HOST} ^backend.timetracker.de$
-RewriteRule ^(contentLoader|dataHandler).php$ /src/$1.php [R=302,S=1,L]
+RewriteRule ^(contentLoader|dataHandler).php$ /src/$1.php?%{QUERY_STRING} [S=1]
 
 RewriteCond %{REQUEST_URI} -d
 RewriteCond %{REQUEST_URI} -f
