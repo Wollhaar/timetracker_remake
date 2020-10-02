@@ -4,23 +4,17 @@
 namespace DavidGoraj\handle;
 
 
+use DavidGoraj\Helper\Controller\UserController;
+
 class Authentication
 {
+    static $userManager = null;
     static $credentials = array();
-    static $user = array();
-    static $db_Conn;
     static $auth = false;
 
-
-    public function __construct()
+    public static function setUserManagement()
     {
-        $this->createAuthSession();
-    }
-
-    public function createAuthSession()
-    {
-        Session::create();
-        self::$db_Conn = new Database();
+        self::$userManager = new UserController();
     }
 
     public static function fillCredentials(Array $credentials)
@@ -37,58 +31,53 @@ class Authentication
         {
             throw Exception('Error:Credentials are missing');
         }
+
+        self::hashPassword();
+        self::$userManager->setData(self::$credentials);
     }
 
-    public static function login(String $user = '', String $password = ''): bool
+    public static function hashPassword()
     {
-        if (empty($user) || empty($password)) {
-            if (!empty(self::$credentials)) {
-                $user = self::$credentials['username'];
-                $email = self::$credentials['email'];
-                $password = self::$credentials['password'];
-            }
-            else return false;
+        self::$credentials['password_hash'] = password_hash(self::$credentials['password'], PASSWORD_BCRYPT);
+        return self::$credentials['password_hash'];
+    }
+
+    public static function login(): bool
+    {
+        if (!empty(self::$credentials)) {
+            $user = self::$credentials['username'];
+            $email = self::$credentials['email'];
+            $password = self::$credentials['password'];
+        }
+        else return false;
+
+        $userData = self::$userManager->getUser();
+        $email = $email ?? null;
+
+        if (!is_null($userData) &&
+            (
+                $user == $userData->getUsername() ||
+                $email == $userData->getEmail()
+            ) &&
+            password_verify($password, $userData->getPasswordHash())
+        )
+        {
+            self::$auth = true;
+            Session::save(self::$auth, 'authenticated');
+            Session::save($userData->getSummary(), 'user');
+        }
+        else {
+            self::$auth = false;
+            Session::save(self::$auth, 'authenticated');
+            Session::save(self::$credentials, 'user');
         }
 
-        if ((isset($user) || $email) && $password) {
-            if (isset($user)) {
-                $sql = "SELECT * FROM `users` WHERE username = ? AND password = ? LIMIT 1";
-            }
-            elseif (isset($email)) {
-                $sql = "SELECT * FROM `users` WHERE email = ? AND password = ? LIMIT 1";
-            }
-
-            $password = password_hash($password, PASSWORD_BCRYPT);
-
-            if (is_string($sql)) {
-                $stmt = self::$db_Conn->mysqli_prepare($sql);
-                $stmt->mysqli_stmt_bind_param('s', $user ? $user : $email);
-                $stmt->mysqli_stmt_bind_param('s', $password);
-                $res = $stmt->execute();
-
-                if (
-                    (
-                        $user == $res['username'] ||
-                        $email == $res['email']
-                    ) &&
-                    password_verify($password, $res['password'])
-                )
-                {
-                    self::$user = $res;
-                    self::$auth = true;
-                }
-            }
-        }
-
-        if (self::$auth) {
-            return true;
-        }
-        return false;
+        return self::$auth;
     }
 
     public static final function destroy()
     {
-        self::$user = null;
+        self::$userManager = null;
         self::$credentials = null;
         self::$auth = null;
 

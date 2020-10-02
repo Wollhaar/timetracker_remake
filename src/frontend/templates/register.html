@@ -1,16 +1,30 @@
 <div class="container">
+    <h3>Userregistrierung</h3>
     <div class="col-12-lg row register-area">
-        <div class="row username--input-field">
-            <label for="username-field">Username:</label>
+        <input type="hidden" name="action" value="register" />
+        <div class="row input-field">
+            <label for="username-field">Username: *</label>
             <input type="text" id="username-field" class="form-control" name="username" placeholder="Username eintippen">
         </div>
-        <div class="row password--input-field">
-            <label for="password-field">Passwort:</label>
+        <div class="row input-field">
+            <label for="password-field">Passwort: *</label>
             <input type="password" id="password-field" class="form-control" name="password" placeholder="Passwort eintippen">
         </div>
-        <div class="row email--input-field">
-            <label for="email-field">Email:</label>
+        <div class="row input-field">
+            <label for="email-field">Email: *</label>
             <input type="text" id="email-field" class="form-control" name="email" placeholder="Email eintippen">
+        </div>
+        <div class="row input-field">
+            <label for="employee-field">Personal-Nr:</label>
+            <input type="text" id="employee-field" class="form-control" name="employee" placeholder="Personal-Nr eintippen">
+        </div>
+        <div class="row input-field">
+            <label for="hired-field">Eingestellt am:</label>
+            <input type="text" id="hired-field" class="form-control" name="hired" placeholder="Einstellungstag eintragen">
+        </div>
+        <div class="row input-field">
+            <label for="status-field">Status:</label>
+            <input type="text" id="status-field" class="form-control" name="status" placeholder="Userstatus eintragen">
         </div>
     </div>
     <div class="col-12-md row button-field">

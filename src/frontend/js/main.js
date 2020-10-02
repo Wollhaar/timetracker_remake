@@ -1,4 +1,11 @@
+var user_logging_in = false;
+var user_logging_out = false;
 
+var default_load = 'login';
+var actions = {
+    'login': user_load(),
+    'load_time': user_load(),
+};
 
 $(document).ready(function () {
     init();
@@ -20,8 +27,14 @@ function setContent(content)
 }
 
 function getData(array_element) {
-    return array_element.forEach(function (key) {
-        var array = [];
+    var array = [];
+    if (typeof array_element === 'object') {
+        for (const [key, value] of Object.entries(array_element)) {
+            array[$(value).attr('name')] = $(value).value;
+        }
+        return array;
+    }
+    array_element.forEach(function (key) {
         if (typeof array_element[key] === 'object') {
             array[$(array_element[key]).attr('name')] = $(array_element[key]).val();
         }
@@ -29,8 +42,8 @@ function getData(array_element) {
             var data = array_element[key].split(':');
             array[data[0]] = data[1];
         }
-        return array;
     });
+    return array;
 }
 
 function load_content(section = 'dashboard')
@@ -47,12 +60,11 @@ function load_content(section = 'dashboard')
 
 function load_data(data)
 {
-    data = JSON.stringify(data);
     $.post('http://backend.timetracker.de:8090/dataHandler.php', {
-        action: "login",
-        user: "david"
+        data
     }, function(data, success) {
         if (success) {
+            console.log(data);
             call_action(data);
         }
         else {
@@ -68,6 +80,7 @@ function call_action(action)
     var data = getData(action.split(';'));
     action = data['action'];
 
+    functionCaller(actions[action]);
 
 }
 
@@ -76,11 +89,14 @@ function login()
     var login_input = $('.login-area input');
     var data = getData(login_input);
 
-    var user = load_data(data);
-    user = user.split(';');
+    load_data(data);
+    user_logging_in = true;
+}
 
+function user_load(user)
+{
     if (user['logged']) {
-        load_content('dashboard');
+        load_content(default_load);
     }
     else login_failed();
 }
@@ -92,10 +108,12 @@ function loadRegister()
 
 function loadLogin()
 {
+
     load_content('login');
 }
 
-function update_title(content) {
+function update_title(content)
+{
     var title = $('title');
     $(title).html(content + ' - ' + $(title).html());
 }
@@ -104,6 +122,16 @@ function register_user()
 {
     var register_form = $('.register-area input');
     var data = getData(register_form);
+
+    data = {
+        action:'register',
+        username:'daviod',
+        password:'iojasldm',
+        email:'davvodo@öalmdö-de',
+        employee:'00001',
+        hired:'0055524',
+        status: null
+    };
 
     var user = load_data(data);
     user = getData(user.split(';'));
@@ -121,10 +149,12 @@ function login_failed()
 
 function logout()
 {
-    var loggedOut = load_data('logout');
+    user_logging_out = true;
+    load_data('logout');
 
-    if(loggedOut) {
-        load_content('default');
+
+    if(logged) {
+        load_content(default_load);
     }
 }
 

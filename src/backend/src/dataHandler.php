@@ -10,6 +10,7 @@ $post = $_POST;
 if (empty($request)) $request = array('parameter' => array('test' => 'test123'));
 if (!is_string($request))$request = json_encode($request);
 
-$output = Handler::handleRequest($request);
+Handler::handleRequest($request);
+$response = Handler::prepareToRespond();
 
-echo $output;
+$response->output();

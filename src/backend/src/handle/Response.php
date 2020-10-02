@@ -20,6 +20,6 @@ class Response
 
     public function output()
     {
-        return $this->data;
+        echo $this->data;
     }
 }

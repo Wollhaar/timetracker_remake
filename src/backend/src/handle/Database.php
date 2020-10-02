@@ -1,10 +1,10 @@
 <?php
 
 
-namespace DavidGoraj\backend\handle;
+namespace DavidGoraj\handle;
 
 
-class Database
+class Database extends \mysqli
 {
     const host = 'database';
     const port = '3306';
@@ -16,6 +16,14 @@ class Database
 
     public function __construct()
     {
+        parent::__construct(
+            self::host,
+            self::user,
+            self::password,
+            self::database,
+            self::port
+        );
+
         return $this->getConnection();
     }
 
@@ -32,11 +40,6 @@ class Database
 
     public static function createConnection()
     {
-        self::$connection = mysqli_connect(
-            self::host,
-            self::user,
-            self::password,
-            self::database,
-            self::port);
+        self::$connection = self::class;
     }
 }

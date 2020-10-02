@@ -21,14 +21,24 @@ class Handler
         Session::create(self::$session);
 
         if (session_status() === PHP_SESSION_ACTIVE) {
-            self::$request = new Request($parameters);
+            self::$session = array('id' => Session::id());
+
+            self::$request = new Request($parameters['data']);
+            self::$request->call();
+
+            self::$session['authenticated'] = Session::load('authenticated');
+
         }
+    }
 
-
+    public static function prepareToRespond()
+    {
         $response = new Response();
+        $response->fill(self::$session, 'session');
         $response->fill(Session::load('user'), 'user');
         $response->fill(Request::getData(), 'request');
         $response->encode();
-        return $response->output();
+
+        return $response;
     }
 }

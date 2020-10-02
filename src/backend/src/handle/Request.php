@@ -4,6 +4,8 @@
 namespace DavidGoraj\handle;
 
 
+use DavidGoraj\Helper\Controller\UserController;
+
 class Request
 {
     static $data;
@@ -11,6 +13,7 @@ class Request
     public function __construct(Array $data)
     {
         self::$data = $data;
+        Authentication::setUserManagement();
     }
 
     public function call()
@@ -19,20 +22,18 @@ class Request
             case 'login':
                 Authentication::fillCredentials(self::$data);
                 Authentication::login();
-
-                if (Authentication::$auth) {
-                    self::$data['user']['auth'] = Authentication::$auth;
-                    self::$data['user']['user_data'] = Authentication::$user;
-
-                    Session::save(self::$data['user_data'], 'user');
-                }
                 break;
+
             case 'logout':
                 Authentication::destroy();
                 self::$data = null;
                 break;
-            case 'register':
 
+            case 'register':
+                var_dump(self::$data);
+                UserController::registerUser(self::$data);
+                Authentication::fillCredentials(self::$data);
+                Authentication::login();
                 break;
         }
     }
