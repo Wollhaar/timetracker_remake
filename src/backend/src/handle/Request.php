@@ -30,11 +30,34 @@ class Request
                 break;
 
             case 'register':
-                var_dump(self::$data);
                 UserController::registerUser(self::$data);
                 Authentication::fillCredentials(self::$data);
                 Authentication::login();
                 break;
+
+            case 'check_session':
+                if (empty(Authentication::$auth)) {
+                    echo 'request:' . json_encode(self::$data);
+                    die ('{
+                        "session": {
+                            "authenticated": false
+                        }
+                        "error": {
+                            "code": "E121",
+                            "message": "Session not authenticated."
+                        }
+                    }');
+                }
+                break;
+
+            default:
+                Session::save(array('error' =>
+                    array(
+                        'code' => 'E120',
+                        'action' => 'none',
+                        'message' => 'Action got not set')
+                ), 'user');
+                Session::save(UserController::$user->getSummary(), 'user');
         }
     }
 

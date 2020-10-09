@@ -42,17 +42,21 @@ class UserController
                     `username`, 
                     `password`, 
                     `email`, 
-                    `employee`, 
+                    `last_name`, 
+                    `first_name`, 
+                    `employee_nr`, 
                     `hired`, 
                     `status`
                 ) 
                 
-                VALUES (?,?,?,?,?,?)";
+                VALUES (?,?,?,?,?,?,?,?)";
 
         $stmt = self::$database_connection->prepare($sql);
         $stmt->bind_param('s', $data['username']);
         $stmt->bind_param('s', $data['password_hash']);
         $stmt->bind_param('s', $data['email']);
+        $stmt->bind_param('s', $data['last_name']);
+        $stmt->bind_param('s', $data['first_name']);
         $stmt->bind_param('i', $data['employee_nr']);
         $stmt->bind_param('d', $data['hired']);
         $stmt->bind_param('i', $data['status']);

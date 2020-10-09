@@ -17,6 +17,7 @@ class Handler
     {
         $parameters = json_decode($parameters, true);
         self::$session = $parameters['session_id'] ?? null;
+        $parameters['data']['request_parameters'] = $parameters;
 
         Session::create(self::$session);
 
@@ -36,6 +37,7 @@ class Handler
         $response = new Response();
         $response->fill(self::$session, 'session');
         $response->fill(Session::load('user'), 'user');
+        $response->fill(Session::load('action'), 'action');
         $response->fill(Request::getData(), 'request');
         $response->encode();
 

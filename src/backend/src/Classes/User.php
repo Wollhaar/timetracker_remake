@@ -10,9 +10,12 @@ class User
     private $username = null;
     private $password_hash = null;
     private $email = null;
+    private $last_name = null;
+    private $first_name = null;
     private $employee_nr = null;
     private $hired = null;
     private $status = null;
+    private $default_landing = null;
 
     /**
      * @return null
@@ -79,9 +82,12 @@ class User
             'id' => $this->id,
             'username' => $this->username,
             'email' => $this->email,
+            'last_name' => $this->last_name,
+            'first_name' => $this->first_name,
             'employee_nr' => $this->employee_nr,
             'hired' => $this->hired,
             'status' => $this->status,
+            'default_landing' => $this->default_landing,
         );
     }
 
@@ -93,9 +99,12 @@ class User
         $this->id = $data['id'] ?? null;
         $this->username = $data['username'] ?? null;
         $this->email = $data['email'] ?? null;
+        $this->last_name = $data['last_name'] ?? null;
+        $this->first_name = $data['first_name'] ?? null;
         $this->employee_nr = $data['employee_nr'] ?? null;
         $this->hired = $data['hired'] ?? null;
         $this->status = $data['status'] ?? null;
+        $this->default_landing = $data['default_landing'] ?? null;
     }
 
     /**

@@ -2,6 +2,7 @@
     <h3>Userregistrierung</h3>
     <div class="col-12-lg row register-area">
         <input type="hidden" name="action" value="register" />
+        <input type="hidden" name="admin" value="" />
         <div class="row input-field">
             <label for="username-field">Username: *</label>
             <input type="text" id="username-field" class="form-control" name="username" placeholder="Username eintippen">
@@ -15,12 +16,20 @@
             <input type="text" id="email-field" class="form-control" name="email" placeholder="Email eintippen">
         </div>
         <div class="row input-field">
+            <label for="fname-field">Vorname:</label>
+            <input type="text" id="fname-field" class="form-control" name="first_name" placeholder="Vorname eintippen">
+        </div>
+        <div class="row input-field">
+            <label for="lname-field">Nachname:</label>
+            <input type="text" id="lname-field" class="form-control" name="last_name" placeholder="Nachname eintippen">
+        </div>
+        <div class="row input-field">
             <label for="employee-field">Personal-Nr:</label>
-            <input type="text" id="employee-field" class="form-control" name="employee" placeholder="Personal-Nr eintippen">
+            <input type="text" id="employee-field" class="form-control" name="employee_nr" placeholder="Personal-Nr eintippen">
         </div>
         <div class="row input-field">
             <label for="hired-field">Eingestellt am:</label>
-            <input type="text" id="hired-field" class="form-control" name="hired" placeholder="Einstellungstag eintragen">
+            <input type="text" id="hired-field" class="form-control" name="hired" placeholder="Einstellungstag(YYYY-MM-DD) eintragen">
         </div>
         <div class="row input-field">
             <label for="status-field">Status:</label>

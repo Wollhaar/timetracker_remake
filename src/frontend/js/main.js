@@ -2,10 +2,9 @@ var user_logging_in = false;
 var user_logging_out = false;
 
 var default_load = 'login';
-var actions = {
-    'login': user_load(),
-    'load_time': user_load(),
-};
+
+
+var global_data = {};
 
 $(document).ready(function () {
     init();
@@ -13,7 +12,8 @@ $(document).ready(function () {
 
 function init()
 {
-    load_content();
+    check_user_status();
+    load_content(default_load);
 }
 
 function setContent(content)
@@ -27,26 +27,27 @@ function setContent(content)
 }
 
 function getData(array_element) {
-    var array = [];
-    if (typeof array_element === 'object') {
+    var array = {};
+    if (array_element.toString() === '[object Object]') {
         for (const [key, value] of Object.entries(array_element)) {
-            array[$(value).attr('name')] = $(value).value;
+            if (value.toString() !== '[object HTMLInputElement]') continue;
+            array[value.attributes.name.value] = value.value;
         }
         return array;
     }
-    array_element.forEach(function (key) {
-        if (typeof array_element[key] === 'object') {
-            array[$(array_element[key]).attr('name')] = $(array_element[key]).val();
-        }
-        if (typeof array_element[key] === 'string') {
-            var data = array_element[key].split(':');
-            array[data[0]] = data[1];
-        }
-    });
+    // array_element.forEach(function (key) {
+    //     if (typeof array_element[key] === 'object') {
+    //         array[$(array_element[key]).attr('name')] = $(array_element[key]).val();
+    //     }
+    //     if (typeof array_element[key] === 'string') {
+    //         var data = array_element[key].split(':');
+    //         array[data[0]] = data[1];
+    //     }
+    // });
     return array;
 }
 
-function load_content(section = 'dashboard')
+function load_content(section = 'login')
 {
     $.post('http://timetracker.de:8080/contentLoader.php', {
         'content': section
@@ -63,9 +64,12 @@ function load_data(data)
     $.post('http://backend.timetracker.de:8090/dataHandler.php', {
         data
     }, function(data, success) {
-        if (success) {
-            console.log(data);
-            call_action(data);
+        if (success && data.search('Fatal error') === -1) {
+            data = JSON.parse(data);
+            global_data = data;
+
+            if (data.action !== undefined) call_error(data.error);
+            call_action(data.action);
         }
         else {
             console.log('Loading Data failed');
@@ -75,13 +79,30 @@ function load_data(data)
     });
 }
 
-function call_action(action)
+function call_action(action) {
+
+    if (global_data.session['authenticated']) {
+        logged_in();
+
+        if (action['load']['content'] === 'default') {
+
+            if (global_data.user['load_default'] === null) {
+                load_content(default_load);
+            } else load_content(global_data.user['default_landing']);
+        }
+
+        if (global_data.user['default_landing'] === 'dashboard') {
+            fill_element_with(global_data.tracked, 'tracking_list');
+        }
+    }
+    else {
+        login_failed();
+    }
+}
+
+function call_error(error)
 {
-    var data = getData(action.split(';'));
-    action = data['action'];
-
-    functionCaller(actions[action]);
-
+    console.log(error);
 }
 
 function login()
@@ -91,6 +112,17 @@ function login()
 
     load_data(data);
     user_logging_in = true;
+}
+
+function logged_in()
+{
+    var user_element = $('#user-field');
+    var username = global_data.user.first_name + ' ' + global_data.user.last_name;
+
+    $(user_element).attr('class', '');
+    $(user_element).text(username);
+
+    user_logging_in = false;
 }
 
 function user_load(user)
@@ -123,23 +155,16 @@ function register_user()
     var register_form = $('.register-area input');
     var data = getData(register_form);
 
-    data = {
-        action:'register',
-        username:'daviod',
-        password:'iojasldm',
-        email:'davvodo@öalmdö-de',
-        employee:'00001',
-        hired:'0055524',
-        status: null
-    };
+    load_data(data);
+}
 
-    var user = load_data(data);
-    user = getData(user.split(';'));
-
-    if (user['logged']) {
-        load_content('dashboard');
+function check_user_status()
+{
+    var data = {
+        action:'check_session'
     }
-    else login_failed();
+
+    load_data(data);
 }
 
 function login_failed()
@@ -155,6 +180,24 @@ function logout()
 
     if(logged) {
         load_content(default_load);
+    }
+}
+
+function fill_element_with(data, id)
+{
+    var element = $(id);
+
+    if (id === 'tracking-list') {
+        var content_row;
+        data.forEach(function (key) {
+            content_row +=
+                '<option value="' +
+                data['type'] + ':' + data['value'] + '">' +
+                data['value'] +
+                '</option>'; // foreach
+        });
+
+        $(element).append(content_row);
     }
 }
 
