@@ -16,10 +16,11 @@ class Handler
     public static function handleRequest(String $parameters)
     {
         $parameters = json_decode($parameters, true);
-        self::$session = $parameters['session_id'] ?? null;
-        $parameters['data']['request_parameters'] = $parameters;
 
-        Session::create(self::$session);
+        Session::create();
+
+        if ($parameters['data']['action'] == 'register')
+            Session::save($parameters['data'], 'register_user');
 
         if (session_status() === PHP_SESSION_ACTIVE) {
             self::$session = array('id' => Session::id());
@@ -28,7 +29,7 @@ class Handler
             self::$request->call();
 
             self::$session['authenticated'] = Session::load('authenticated');
-
+            if (empty(Session::id())) self::$session = array('session' => 'destroyed');
         }
     }
 
@@ -39,6 +40,12 @@ class Handler
         $response->fill(Session::load('user'), 'user');
         $response->fill(Session::load('action'), 'action');
         $response->fill(Request::getData(), 'request');
+        $response->fill(Request::$timeManager::$tracked, 'track');
+        $response->fill(Session::load('register_user'), 'register');
+
+        if (!empty(Session::load('error')))
+            $response->fill(Session::load('error'), 'error');
+
         $response->encode();
 
         return $response;

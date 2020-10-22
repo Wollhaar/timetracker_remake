@@ -1,8 +1,5 @@
-var user_logging_in = false;
-var user_logging_out = false;
-
 var default_load = 'login';
-
+var admin = null;
 
 var global_data = {};
 
@@ -81,22 +78,20 @@ function load_data(data)
 
 function call_action(action) {
 
-    if (global_data.session['authenticated']) {
+    if (global_data.session.authenticated) {
         logged_in();
+        user_authentication(global_data.user.status);
 
-        if (action['load']['content'] === 'default') {
-
-            if (global_data.user['load_default'] === null) {
+        if (action.load.content === 'default') {
+            if (global_data.user.load_default === null) {
                 load_content(default_load);
-            } else load_content(global_data.user['default_landing']);
+            }
+            else load_content(global_data.user.default_landing);
         }
 
-        if (global_data.user['default_landing'] === 'dashboard') {
-            fill_element_with(global_data.tracked, 'tracking_list');
+        if (global_data.request.action === 'track' && global_data.request.tracked) {
+            load_data({action: 'tracking_list', tracking_area: 'today'});
         }
-    }
-    else {
-        login_failed();
     }
 }
 
@@ -105,32 +100,21 @@ function call_error(error)
     console.log(error);
 }
 
-function login()
-{
-    var login_input = $('.login-area input');
-    var data = getData(login_input);
-
-    load_data(data);
-    user_logging_in = true;
-}
-
-function logged_in()
-{
-    var user_element = $('#user-field');
-    var username = global_data.user.first_name + ' ' + global_data.user.last_name;
-
-    $(user_element).attr('class', '');
-    $(user_element).text(username);
-
-    user_logging_in = false;
-}
-
 function user_load(user)
 {
     if (user['logged']) {
         load_content(default_load);
     }
     else login_failed();
+}
+
+function hide_user()
+{
+    $('#user-field').text('');
+    $('#user-field').attr('class', 'd-none');
+
+    $('#login-link').attr('class', '');
+    $('#logout-link').attr('class', 'd-none');
 }
 
 function loadRegister()
@@ -150,37 +134,17 @@ function update_title(content)
     $(title).html(content + ' - ' + $(title).html());
 }
 
+function showRegister()
+{
+    if (admin) $('#register-link').attr('class', '');
+}
+
 function register_user()
 {
     var register_form = $('.register-area input');
     var data = getData(register_form);
 
     load_data(data);
-}
-
-function check_user_status()
-{
-    var data = {
-        action:'check_session'
-    }
-
-    load_data(data);
-}
-
-function login_failed()
-{
-    console.log('login failed');
-}
-
-function logout()
-{
-    user_logging_out = true;
-    load_data('logout');
-
-
-    if(logged) {
-        load_content(default_load);
-    }
 }
 
 function fill_element_with(data, id)
@@ -201,10 +165,117 @@ function fill_element_with(data, id)
     }
 }
 
+
+// * --- login script --- * : BEGIN
+
+function check_user_status()
+{
+    var data = {
+        action:'check_session'
+    }
+
+    load_data(data);
+}
+
+function login()
+{
+    var login_input = $('.login-area input');
+    var data = getData(login_input);
+
+    load_data(data);
+}
+
+function logged_in()
+{
+    var user_element = $('#user-field');
+    var username = global_data.user.first_name + ' ' + global_data.user.last_name;
+
+    $(user_element).attr('class', '');
+    $(user_element).text(username);
+
+    $('#login-link').attr('class', 'd-none');
+    $('#logout-link').attr('class', '');
+}
+
+function user_authentication(auth)
+{
+    if (auth > 7) {
+        admin = true;
+        showRegister();
+    }
+}
+
+function login_failed()
+{
+    console.log('login failed');
+}
+
+function logout()
+{
+    load_data({action: 'logout'});
+
+    if (global_data.session === 'destroyed') {
+        hide_user();
+        load_content(default_load);
+    }
+}
+
+// * --- login script --- * : END
+
+
+
+// * --- tracking script --- * : BEGIN
+
+function work(start_stop)
+{
+    track('work', start_stop);
+}
+
+function break_work(start_stop)
+{
+    track('break', start_stop);
+}
+
+function track(type, start_stop)
+{
+    let data = {
+        'action': 'track',
+        'type': type,
+        'start_stop': start_stop,
+        'user_id': $('input[name=user_id]').value
+    }
+
+    load_data(data);
+}
+
+// * --- tracking script --- * : BEGIN
+
+
+
 // --- jquery functions ---
 
-$('.login-area input').keyup(function (event) {
-    console.log('key pressed: ' + event.key);
-    if (event.key === 13) login();
+$('a').click(function(e){
+    e.preventDefault();
+})
+
+global_data.request.tracking_list.ready(function (){
+    $('.dashboard .tracking-list').ready(function(){
+        fill_element_with(global_data.request.tracking_list, 'tracking_list');
+    });
 });
 
+// $('.dashboard .tracking-list').ready(function(){
+//     if (global_data.request.tracking_list === undefined) {
+//         load_data({action: 'tracking_list', tracking_area: 'today'})
+//     }
+//     else {
+//         fill_element_with(global_data.request.tracking_list, 'tracking_list');
+//     }
+// });
+
+// --- jquery login ---
+$('.login-area input').ready(function() {
+    $(this).keyup(function (event) {
+        if (event.key === 'Enter') login();
+    });
+});

@@ -4,6 +4,7 @@
 namespace DavidGoraj\handle;
 
 
+use DavidGoraj\Classes\User;
 use DavidGoraj\Helper\Controller\UserController;
 
 class Authentication
@@ -23,9 +24,11 @@ class Authentication
             self::$credentials = $credentials;
         }
 
-        if ((
+        if (
+            (
                 empty(self::$credentials['username']) ||
-                empty(self::$credentials['email'])) &&
+                empty(self::$credentials['email'])
+            ) &&
             empty(self::$credentials['password'])
         )
         {
@@ -52,7 +55,6 @@ class Authentication
         else return false;
 
         $userData = self::$userManager->getUser();
-        $email = $email ?? null;
 
         if (!is_null($userData) &&
             (
@@ -80,6 +82,14 @@ class Authentication
         Session::save(self::$auth, 'authenticated');
 
         return self::$auth;
+    }
+
+    public static function checkAuthorization(User $user): bool
+    {
+        if ($user->getStatus() > COM_ADMIN) $auth = true;
+        else $auth = false;
+
+        return $auth;
     }
 
     public static final function destroy()

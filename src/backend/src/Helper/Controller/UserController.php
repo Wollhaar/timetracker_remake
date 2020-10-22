@@ -52,19 +52,23 @@ class UserController
                 VALUES (?,?,?,?,?,?,?,?)";
 
         $stmt = self::$database_connection->prepare($sql);
-        $stmt->bind_param('s', $data['username']);
-        $stmt->bind_param('s', $data['password_hash']);
-        $stmt->bind_param('s', $data['email']);
-        $stmt->bind_param('s', $data['last_name']);
-        $stmt->bind_param('s', $data['first_name']);
-        $stmt->bind_param('i', $data['employee_nr']);
-        $stmt->bind_param('d', $data['hired']);
-        $stmt->bind_param('i', $data['status']);
+        $stmt->bind_param('sssssidi',
+            $data['username'],
+            $data['password_hash'],
+            $data['email'],
+            $data['last_name'],
+            $data['first_name'],
+            $data['employee_nr'],
+            $data['hired'],
+            $data['status']
+        );
+
         $res = $stmt->execute();
 
         if ($res) {
             self::$user->setData($data);
         }
+        else echo 'insert failed';
     }
 
     public function getUser()
@@ -89,7 +93,6 @@ class UserController
 
             $stmt = self::$database_connection->prepare($sql);
             $stmt->bind_param('i', $parameter);
-//            $stmt->fetch();
             $stmt->execute();
 
             $res = $stmt->get_result()->fetch_assoc();

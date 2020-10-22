@@ -4,9 +4,9 @@ namespace DavidGoraj\handle;
 
 class Session
 {
-    public static function create(String $id = null)
+    public static function create()
     {
-        session_id($id);
+        session_id('anbeca');
         session_start();
     }
 

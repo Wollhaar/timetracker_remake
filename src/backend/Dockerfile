@@ -7,6 +7,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
     apt-get install --quiet apt-utils -y \
             iputils-ping -y \
             vim -y \
+            nano -y \
             wget -y \
             zip -y \
             npm -y \

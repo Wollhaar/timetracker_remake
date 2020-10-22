@@ -20,17 +20,19 @@
     <h1>Timetracking</h1>
     <ul>
         <li id="user-field" class="d-none">{User}</li>
-        <li id="login-link"><a href="#" onclick="loadLogin()">Login</a></li>
-        <li id="logout-link" class="d-none"><a href="#" onclick="logout()">Logout</a></li>
-        <li id="balance-link"><a href="#" onclick="loadBalance()">Bilanz</a></li>
-        <li id="register-link" class="d-none"><a href="#" onclick="loadRegister()">User anlegen</a></li>
+        <li id="login-link"><a href="login" onclick="loadLogin()">Login</a></li>
+        <li id="logout-link" class="d-none"><a href="logout" onclick="logout()">Logout</a></li>
+        <li id="balance-link"><a href="balance" onclick="loadBalance()">Bilanz</a></li>
+        <li id="register-link" class="d-none"><a href="register" onclick="loadRegister()">User anlegen</a></li>
     </ul>
 </header>
 
 <div class="wrapper">
     <div class="container"></div>
 </div>
-<footer></footer>
+<footer>
+    <button class="form-control" onclick="load_data({action:'check_session'})">Load Session</button>
+</footer>
 
 <script type="text/javascript" src="js/main.js"></script>
 </body>
