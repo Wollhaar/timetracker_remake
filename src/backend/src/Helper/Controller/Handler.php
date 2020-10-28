@@ -40,7 +40,7 @@ class Handler
         $response->fill(Session::load('user'), 'user');
         $response->fill(Session::load('action'), 'action');
         $response->fill(Request::getData(), 'request');
-        $response->fill(Request::$timeManager::$tracked, 'track');
+//        $response->fill(Request::$timeManager::$tracked, 'track');
         $response->fill(Session::load('register_user'), 'register');
 
         if (!empty(Session::load('error')))

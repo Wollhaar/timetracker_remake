@@ -29,8 +29,7 @@ class Request
                 Authentication::login();
 
                 if (Authentication::$auth) {
-                    self::$data['tracking_list'] =
-                        self::$timeManager::getTracking('today');
+                    $this->getTracks();
                 }
                 break;
 
@@ -67,35 +66,29 @@ class Request
                 else {
                     Authentication::$auth = true;
 
-                    self::$data['tracking_list'] =
-                        self::$timeManager::getTracking('today');
+                    self::$data['tracking_list'] = $this->getTracks();
                 }
                 break;
 
             case 'track':
-//                TODO: control if user, is the one user who tracking
                 $user = new User();
                 $user->setData(Session::load('user'));
 
                 self::$timeManager->setUser($user);
                 self::$data['tracked'] = self::$timeManager::newStamp(self::$data);
+                self::$data['tracking_list'] = self::$timeManager::getTracking('today');
                 break;
 
             case 'tracking_list':
-                $user = new User();
-                $user->setData(Session::load('user'));
-
-                self::$timeManager->setUser($user);
-                self::$data['tracking_list'] =
-                    self::$timeManager::getTracking(self::$data['tracking_area']);
+                self::$data['tracking_list'] = $this->getTracks();
                 break;
 
             default:
                 Session::save(array('error' =>
                     array(
                         'code' => 'E120',
-                        'action' => 'none',
-                        'message' => 'Action got not set')
+                        'action' => self::$data['action'] ?? 'none',
+                        'message' => 'Action got not found')
                 ), 'action');
                 Session::save(UserController::$user->getSummary(), 'user');
         }
@@ -107,5 +100,17 @@ class Request
     public static function getData(): array
     {
         return self::$data;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTracks(): array
+    {
+        $user = new User();
+        $user->setData(Session::load('user'));
+
+        self::$timeManager->setUser($user);
+        return self::$timeManager::getTracking('today');
     }
 }

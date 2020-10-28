@@ -67,6 +67,7 @@ class Timecontroller
 
         if ($track_area === 'today') {
             $track_area = date('Y-m-d') . '%';
+//            $track_area = '2020-10-21' . '%';
         }
         $user_id = self::$user->getId();
 
@@ -79,15 +80,13 @@ class Timecontroller
             $track_area
         );
         $success = $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-
-        echo json_encode($result);
+        $result = $stmt->get_result();
 
         foreach ($result as $stamp) {
             $time = new Time();
             $time->setData($stamp);
 
-            self::$tracked[$time->getId()] = $time;
+            self::$tracked[$time->getId()] = $stamp;
         }
 
         if (!$success) {

@@ -10,7 +10,6 @@ $(document).ready(function () {
 function init()
 {
     check_user_status();
-    load_content(default_load);
 }
 
 function setContent(content)
@@ -21,6 +20,9 @@ function setContent(content)
     }
     console.log('page loaded');
     $('.wrapper .container').html(content);
+
+    let data = $('.wrapper .container').children().attr('class');
+    content_ready(data);
 }
 
 function getData(array_element) {
@@ -65,7 +67,12 @@ function load_data(data)
             data = JSON.parse(data);
             global_data = data;
 
-            if (data.action !== undefined) call_error(data.error);
+            if (data.action === undefined ||
+                data.request === undefined)
+            {
+                call_error(data.error);
+                return;
+            }
             call_action(data.action);
         }
         else {
@@ -74,6 +81,26 @@ function load_data(data)
             console.log(data);
         }
     });
+}
+
+function content_ready(content)
+{
+    if (content.search('dashboard') !== -1) {
+        let tracking_list = global_data.request.tracking_list;
+        if (tracking_list !== undefined) {
+            let tracks = check_list(tracking_list);
+            fill_tracking_list(tracks);
+
+            let changes = check_track(tracking_list);
+            change_button(changes.work.type,
+                changes.work.start_stop,
+                changes.work.text);
+
+            change_button(changes.break.type,
+                changes.break.start_stop,
+                changes.break.text);
+        }
+    }
 }
 
 function call_action(action) {
@@ -86,11 +113,18 @@ function call_action(action) {
             if (global_data.user.load_default === null) {
                 load_content(default_load);
             }
-            else load_content(global_data.user.default_landing);
+            else {
+                let default_element = $('.' + global_data.user.default_landing);
+                if (default_element.length === 0) {
+                    load_content(global_data.user.default_landing);
+                }
+                else content_ready(default_element.attr('class'));
+            }
         }
 
-        if (global_data.request.action === 'track' && global_data.request.tracked) {
-            load_data({action: 'tracking_list', tracking_area: 'today'});
+        if (global_data.request.action === 'track') {
+            // if (data.track === true) {
+            // }
         }
     }
 }
@@ -147,26 +181,8 @@ function register_user()
     load_data(data);
 }
 
-function fill_element_with(data, id)
-{
-    var element = $(id);
-
-    if (id === 'tracking-list') {
-        var content_row;
-        data.forEach(function (key) {
-            content_row +=
-                '<option value="' +
-                data['type'] + ':' + data['value'] + '">' +
-                data['value'] +
-                '</option>'; // foreach
-        });
-
-        $(element).append(content_row);
-    }
-}
-
-
 // * --- login script --- * : BEGIN
+
 
 function check_user_status()
 {
@@ -222,9 +238,9 @@ function logout()
 
 // * --- login script --- * : END
 
-
-
 // * --- tracking script --- * : BEGIN
+
+
 
 function work(start_stop)
 {
@@ -248,34 +264,131 @@ function track(type, start_stop)
     load_data(data);
 }
 
+function check_track(tracking)
+{
+    let list = {};
+
+    let k = Object.entries(tracking);
+    let kl = k.length;
+    for (let i = 0; kl > i; i++) {
+        let track = k.pop()[1];
+        let type = track.type;
+
+        // skip or break if already set
+        if (list['work'] !== undefined && list['break'] !== undefined) break;
+        if (list[type] !== undefined) continue;
+
+        if (track.type === 'work') track.text = 'Arbeit';
+        else if (track.type === 'break') track.text = 'Pause';
+
+        if (track.start_stop === 'start') {
+            track.text += ' beenden';
+            track.start_stop = 'stop';
+        }
+        else if (track.start_stop === 'stop') {
+            track.text += ' beginnen';
+            track.start_stop = 'start';
+        }
+
+        list[type] = track;
+    }
+
+    return list;
+}
+
+function change_button(type, start_stop, text)
+{
+    let btn = $('#btn-' + type);
+
+    $(btn).html(text);
+    $(btn).val(start_stop);
+}
+
+function check_list(tracks)
+{
+    let list = $('#tracking_list option');
+
+    for (let key in list) {
+        if (list[key] === tracks[key]) delete tracks[key];
+    }
+    return tracks;
+}
+
+function fill_element_with(data, id) {}
+
+function fill_tracking_list(tracks)
+{
+    var content_row = '';
+
+    for (let key in tracks) {
+        content_row +=
+            '<option value="' +
+                tracks[key]['id'] +
+            '">' +
+                capitalize(tracks[key]['type']) + ' ' +
+                capitalize(tracks[key]['start_stop']) + ' ' +
+                tracks[key]['timestamp'] +
+            '</option>'; // foreach
+    }
+
+    $('#tracking_list').append(content_row);
+}
 // * --- tracking script --- * : BEGIN
 
 
 
 // --- jquery functions ---
 
-$('a').click(function(e){
-    e.preventDefault();
-})
-
-global_data.request.tracking_list.ready(function (){
-    $('.dashboard .tracking-list').ready(function(){
-        fill_element_with(global_data.request.tracking_list, 'tracking_list');
+$(document).ready(function () {
+    $('a').click(function (e) {
+        e.preventDefault();
     });
-});
 
-// $('.dashboard .tracking-list').ready(function(){
-//     if (global_data.request.tracking_list === undefined) {
-//         load_data({action: 'tracking_list', tracking_area: 'today'})
-//     }
-//     else {
-//         fill_element_with(global_data.request.tracking_list, 'tracking_list');
-//     }
-// });
+
+// --- jquery tracking ---
+
+    $('#tracking_list option').click( function () {
+        console.log('this.value');
+        console.log(this.value);
+
+        let track = this.value;
+        track = global_data.request.tracking_list[track];
+        let min = new Date(track.timestamp);
+        let max = new Date();
+
+        min = new Date(
+            min.getFullYear() + '-' +
+            '0' + (min.getMonth() - 2) +
+            '-01 07:00:00');
+
+        $('.change-time--box').removeClass('d-none');
+        $('.change-time--box input[name=type__start_stop]').val(track.type + ' ' + track.start_stop);
+
+        let timeElement = $('.change-time--box input[name=timestamp]');
+        timeElement.val(track.timestamp);
+        timeElement.attr('min', min);
+        timeElement.attr('max', max);
+    });
+
 
 // --- jquery login ---
-$('.login-area input').ready(function() {
-    $(this).keyup(function (event) {
-        if (event.key === 'Enter') login();
+
+    $('.login-area input').ready(function () {
+        $(this).keyup(function (event) {
+            if (event.key === 'Enter') login();
+        });
     });
+
+
 });
+
+
+
+// --- extensions ---
+
+// --- uppercase first-letter ---
+// --- https://flaviocopes.com/how-to-uppercase-first-letter-javascript/ ---
+const capitalize = (s) => {
+    if (typeof s !== 'string') return ''
+    return s.charAt(0).toUpperCase() + s.slice(1)
+}
