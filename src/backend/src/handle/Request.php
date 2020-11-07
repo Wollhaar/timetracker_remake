@@ -29,7 +29,7 @@ class Request
                 Authentication::login();
 
                 if (Authentication::$auth) {
-                    $this->getTracks();
+                    self::$data['tracking_list'] = $this->getTracks();
                 }
                 break;
 
@@ -41,23 +41,29 @@ class Request
             case 'register':
                 $admin = new User();
                 $admin->setData(Session::load('user'));
-                echo 'user-status: ' .$admin->getStatus();
 
                 if (Authentication::checkAuthorization($admin))
                     UserController::registerUser(self::$data);
                 break;
 
             case 'check_session':
-                if (empty(Session::load('user')['id'])) {
+                if (
+                    empty(Session::load('user')['id']) &&
+                    Authentication::$auth === false
+                ) {
                     echo json_encode( array (
                         "session" => array (
                             "authenticated" => Authentication::$auth
                         ),
-                        array (
-                            "error" => array (
-                                "code" => "E121",
-                                "message" => "Session not authenticated."
-                            )
+                        "action" => array (
+                            "load" => 'home'
+                        ),
+                        "request" => array (
+                            "action" => 'check_session'
+                        ),
+                        "error" => array (
+                            "code" => "E121",
+                            "message" => "Session not authenticated."
                         ),
                         'request:' => self::$data
                     ));
@@ -80,7 +86,34 @@ class Request
                 break;
 
             case 'tracking_list':
+                break;
+
+            case 'update_track':
+                $user = new User();
+                $user->setData(Session::load('user'));
+
+                self::$timeManager->setUser($user);
+                self::$data['updated'] = self::$timeManager::updateTime(self::$data);
                 self::$data['tracking_list'] = $this->getTracks();
+
+                Session::save(array_merge(
+                    Session::load('action'),
+                    array('update' => 'tracking')
+                ), 'action');
+                break;
+
+            case 'delete_track':
+                $user = new User();
+                $user->setData(Session::load('user'));
+
+                self::$timeManager->setUser($user);
+                self::$data['deleted'] = self::$timeManager::delete(self::$data['id']);
+                self::$data['tracking_list'] = $this->getTracks();
+
+                Session::save(array_merge(
+                    Session::load('action'),
+                    array('update' => 'tracking')
+                ), 'action');
                 break;
 
             default:

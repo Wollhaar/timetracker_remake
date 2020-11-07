@@ -46,6 +46,7 @@ class Session
                 $params["secure"], $params["httponly"]
             );
         }
+        session_destroy();
     }
 
     public static function loadTestObject(String $index): Session

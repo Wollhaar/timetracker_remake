@@ -15,6 +15,6 @@ switch ($post['content']) {
         include 'templates/balance.html';
         break;
     default:
-        include 'templates/home.html'; // TODO: CURL
+        include 'templates/home.html';
 }
 die;

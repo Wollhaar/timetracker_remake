@@ -61,13 +61,33 @@ class Timecontroller
         return $success;
     }
 
+    public static function getTrack(String $id)
+    {
+        $user_id = self::$user->getId();
+
+        // check for deleted track
+        $sql = "SELECT * FROM `user_timestamps` 
+                WHERE `id` = ? 
+                AND `user_id` = ? 
+                LIMIT 1";
+
+        $stmt = self::$database_connection->prepare($sql);
+        $stmt->bind_param('ii',
+            $id,
+            $user_id
+        );
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_row();
+
+        return $result;
+    }
+
     public static function getTracking(String $track_area)
     {
         if (empty(self::$database_connection)) new self();
 
         if ($track_area === 'today') {
             $track_area = date('Y-m-d') . '%';
-//            $track_area = '2020-10-21' . '%';
         }
         $user_id = self::$user->getId();
 
@@ -97,5 +117,66 @@ class Timecontroller
             ), 'error');
         }
         return self::$tracked;
+    }
+
+    public static function updateTime(array $track)
+    {
+        if (empty(self::$database_connection)) new self();
+
+        $user_id = self::$user->getId();
+
+        $sql = "UPDATE `user_timestamps` 
+                SET `timestamp` = ? 
+                WHERE `id` = ? 
+                AND `user_id` = ? 
+                LIMIT 1";
+
+        $stmt = self::$database_connection->prepare($sql);
+        $stmt->bind_param('dii',
+            $track['timestamp'],
+            $track['id'],
+            $user_id
+        );
+        $success = $stmt->execute();
+
+        if (!$success) {
+            Session::save(array(
+                'code' => 'E203',
+                'action' => 'update_track',
+                'message' => 'Track could not be updated.'
+            ), 'error');
+        }
+        return $success;
+    }
+
+    public static function delete(String $id)
+    {
+        if (empty(self::$database_connection)) new self();
+
+        $user_id = self::$user->getId();
+
+        $sql = "DELETE FROM `user_timestamps` 
+                WHERE `id` = ? 
+                AND `user_id` = ? 
+                LIMIT 1";
+
+        $stmt = self::$database_connection->prepare($sql);
+        $stmt->bind_param('ii',
+            $id,
+            $user_id
+        );
+        $stmt->execute();
+
+        // check for deleted track
+        $success = self::getTrack($id);
+
+        if (!$success) {
+            Session::save(array(
+                'code' => 'E204',
+                'action' => 'delete_track',
+                'message' => 'Track could not be deleted.'
+            ), 'error');
+        }
+        return $success;
     }
 }

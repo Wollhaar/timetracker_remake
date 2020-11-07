@@ -7,6 +7,7 @@ namespace DavidGoraj\Helper\Controller;
 use DavidGoraj\Classes\User;
 use DavidGoraj\handle\Authentication;
 use DavidGoraj\handle\Database;
+use DavidGoraj\handle\Session;
 
 class UserController
 {
@@ -48,7 +49,6 @@ class UserController
                     `hired`, 
                     `status`
                 ) 
-                
                 VALUES (?,?,?,?,?,?,?,?)";
 
         $stmt = self::$database_connection->prepare($sql);
@@ -68,7 +68,7 @@ class UserController
         if ($res) {
             self::$user->setData($data);
         }
-        else echo 'insert failed';
+        else Session::save(array('code' => 'E111','message' => 'Register failed'), 'error');
     }
 
     public function getUser()
@@ -124,8 +124,13 @@ class UserController
             return 'User not found.';
         }
 
-        $sql = "UPDATE `users` SET password = ? WHERE id = ? LIMIT 1;
-                SELECT password FROM `users` WHERE id = ? LIMIT 1";
+        $sql = "UPDATE `users` 
+                SET password = ? 
+                WHERE id = ? 
+                LIMIT 1;
+                
+                SELECT password FROM `users` 
+                WHERE id = ? LIMIT 1";
 
         if (is_null(self::$database_connection->connect_error)) {
             $stmt = self::$database_connection->prepare($sql);

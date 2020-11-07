@@ -37,15 +37,17 @@ class Handler
     {
         $response = new Response();
         $response->fill(self::$session, 'session');
-        $response->fill(Session::load('user'), 'user');
-        $response->fill(Session::load('action'), 'action');
-        $response->fill(Request::getData(), 'request');
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $response->fill(Session::load('user'), 'user');
+            $response->fill(Session::load('action'), 'action');
+            $response->fill(Request::getData(), 'request');
 //        $response->fill(Request::$timeManager::$tracked, 'track');
-        $response->fill(Session::load('register_user'), 'register');
+//            $response->fill(Session::load('register_user'), 'register');
 
-        if (!empty(Session::load('error')))
-            $response->fill(Session::load('error'), 'error');
-
+            if (!empty(Session::load('error')))
+                $response->fill(Session::load('error'), 'error');
+        }
         $response->encode();
 
         return $response;

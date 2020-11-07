@@ -1,6 +1,7 @@
 var default_load = 'login';
 var admin = null;
-
+var dayInWeek = [null, 'Mo','Di','Mi','Do','Fr','Sa','So'];
+var monthInYear = [null, 'Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 var global_data = {};
 
 $(document).ready(function () {
@@ -29,21 +30,26 @@ function getData(array_element) {
     var array = {};
     if (array_element.toString() === '[object Object]') {
         for (const [key, value] of Object.entries(array_element)) {
-            if (value.toString() !== '[object HTMLInputElement]') continue;
+            if (value.toString() !== '[object HTMLInputElement]' &&
+                value.toString() !== '[object HTMLSelectElement]') continue;
             array[value.attributes.name.value] = value.value;
         }
         return array;
     }
-    // array_element.forEach(function (key) {
-    //     if (typeof array_element[key] === 'object') {
-    //         array[$(array_element[key]).attr('name')] = $(array_element[key]).val();
-    //     }
-    //     if (typeof array_element[key] === 'string') {
-    //         var data = array_element[key].split(':');
-    //         array[data[0]] = data[1];
-    //     }
-    // });
     return array;
+}
+
+function collectData(from)
+{
+    let data = {};
+    $('.' + from + ' input').each(function(key){
+        data[$(this).attr('name')] = this.value;
+    });
+    $('.' + from + ' select').each(function(key){
+        data[$(this).attr('name')] = this.value;
+    });
+
+    return data;
 }
 
 function load_content(section = 'login')
@@ -70,9 +76,18 @@ function load_data(data)
             if (data.action === undefined ||
                 data.request === undefined)
             {
-                call_error(data.error);
-                return;
+                console.log('check one');
+                if (data.session === 'destroyed') {
+                    data.action = {load: 'home'};
+                    console.log('destroyed');
+                }
+                else {
+                    call_error(data.error);
+                    return;
+                }
             }
+            console.log('check two');
+
             call_action(data.action);
         }
         else {
@@ -86,25 +101,37 @@ function load_data(data)
 function content_ready(content)
 {
     if (content.search('dashboard') !== -1) {
-        let tracking_list = global_data.request.tracking_list;
-        if (tracking_list !== undefined) {
-            let tracks = check_list(tracking_list);
-            fill_tracking_list(tracks);
+        let tracking_list = JSON.parse(JSON.stringify(global_data.request.tracking_list));
+        if (tracking_list !== undefined) { // TODO: check for better conditions
+            fill_tracking_list(tracking_list);
 
             let changes = check_track(tracking_list);
-            change_button(changes.work.type,
-                changes.work.start_stop,
-                changes.work.text);
 
-            change_button(changes.break.type,
-                changes.break.start_stop,
-                changes.break.text);
+            for (let key in changes) {
+                change_button(changes[key].type,
+                    changes[key].start_stop,
+                    changes[key].text);
+            }
         }
+
+        $('#tracking_list option').click( function () {
+            change_track(this);
+        });
     }
+
+    if (content.search('balance') !== -1) {
+        let tracking_list = JSON.parse(JSON.stringify(global_data.request.tracking_list));
+        if (tracking_list !== undefined) { // TODO: check for better conditions
+            list_balance(tracking_list);
+        }
+
+    }
+    $('#tracking_list option').click( function () {
+        change_track(this);
+    });
 }
 
 function call_action(action) {
-
     if (global_data.session.authenticated) {
         logged_in();
         user_authentication(global_data.user.status);
@@ -122,17 +149,105 @@ function call_action(action) {
             }
         }
 
-        if (global_data.request.action === 'track') {
-            // if (data.track === true) {
-            // }
+        if (action.load.content === 'balance')
+            load_content('balance');
+
+        if (action.update === 'tracking') {
+            fill_tracking_list(global_data.request.tracking_list);
         }
     }
+    else {
+        console.log('load');
+        if (global_data.session === 'destroyed') {
+            global_data.logout = true;
+        }
+        load_content(action.load);
+    }
+    console.log('check');
 }
 
 function call_error(error)
 {
     console.log(error);
 }
+
+// --- date script --- : BEGIN
+
+function date_list(tracks)
+{
+    let list = {};
+    for (let value of Object.values(tracks)) {
+        let date = new Date(value.timestamp);
+        let y = date.getFullYear();
+        let m = date.getMonth() + 1;
+        let d = date.getDate();
+
+        if (list[y] === undefined) list[y] = [];
+        if (list[y][m] === undefined) list[y][m] = [];
+        if (list[y][m][d] === undefined) list[y][m][d] = [];
+
+        list[y][m][d][value.id] = date;
+    }
+
+    return list;
+}
+
+function endOfWeek(day)
+{
+    return day >= 5;
+}
+
+function endOfMonth(day, date)
+{
+    switch (date.getMonth()) {
+        // source: https://stackoverrun.com/de/q/4444865
+
+        case 2:
+            if (day >= 28) {
+                let year = date.getFullYear();
+                return !(day !== 29 &&
+                    ((year % 4 === 0) &&
+                        (year % 100 !== 0)) ||
+                    (year % 400 === 0));
+            }
+            break;
+        case 1:
+        case 3:
+        case 5:
+        case 7:
+        case 8:
+        case 10:
+
+        case 12:
+            if (day === 31) return true;
+            break;
+        case 4:
+        case 6:
+        case 9:
+
+        case 11:
+            if (day === 30) return true;
+        break;
+        default:
+            return false;
+    }
+}
+
+function dayGotSet(dayElement, day) {
+    $(dayElement).find('h6').each(function(key){
+        return (this.innerText.search(day) !== -1);
+    });
+}
+
+function build_trackDisplay(track)
+{
+    return capitalize(track['type']) + ' ' +
+        capitalize(track['start_stop']) + ' ' +
+        track['timestamp'];
+}
+
+// --- date script --- : END
+
 
 function user_load(user)
 {
@@ -158,14 +273,25 @@ function loadRegister()
 
 function loadLogin()
 {
-
     load_content('login');
+}
+
+function loadBalance()
+{
+    load_content('balance');
 }
 
 function update_title(content)
 {
-    var title = $('title');
-    $(title).html(content + ' - ' + $(title).html());
+    let title = $('title');
+
+    let update = title.html();
+    let uPos = update.search(' - ');
+
+    if (uPos !== -1) {
+        update = content + update.substr(uPos);
+        $(title).html(update);
+    }
 }
 
 function showRegister()
@@ -176,6 +302,7 @@ function showRegister()
 function register_user()
 {
     var register_form = $('.register-area input');
+    register_form.push($('.register-area select'));
     var data = getData(register_form);
 
     load_data(data);
@@ -318,57 +445,146 @@ function fill_element_with(data, id) {}
 
 function fill_tracking_list(tracks)
 {
-    var content_row = '';
+    var content_row = [];
 
     for (let key in tracks) {
-        content_row +=
-            '<option value="' +
-                tracks[key]['id'] +
-            '">' +
-                capitalize(tracks[key]['type']) + ' ' +
-                capitalize(tracks[key]['start_stop']) + ' ' +
-                tracks[key]['timestamp'] +
-            '</option>'; // foreach
+        content_row[key] = document.createElement('option');
+        content_row[key].value = tracks[key]['id'];
+        content_row[key].innerHTML =
+                    capitalize(tracks[key]['type']) + ' ' +
+                    capitalize(tracks[key]['start_stop']) + ' ' +
+                    tracks[key]['timestamp'];
     }
 
-    $('#tracking_list').append(content_row);
+    $('#tracking_list').html(content_row);
 }
-// * --- tracking script --- * : BEGIN
+
+function change_track(element)
+{
+    let track = element.value;
+    track = global_data.request.tracking_list[track];
+    let min = new Date(track.timestamp);
+    let max = new Date();
+
+    min.setMonth(min.getMonth() - 3);
+    min.setDate(1);
+    min.setHours(8);
+    min.setMinutes(0);
+    min.setSeconds(0);
+
+    $('.change-track--box').removeClass('d-none');
+    $('.change-track--box input[name=id]').val(track.id);
+    $('.change-track--box input[name=type__start_stop]').val(track.type + ' ' + track.start_stop);
+
+    let timeElement = $('.change-track--box input[name=timestamp]');
+    timeElement.val(track.timestamp);
+    timeElement.attr('min', min);
+    timeElement.attr('max', max);
+}
+
+function split___type__start_stop(data)
+{
+    data = data.split(' ');
+    return {type: data[0], start_stop: data[1]};
+}
+
+function update_track(action) {
+    let data = collectData('change-track--box');
+    data = Object.assign(split___type__start_stop(data.type__start_stop), data);
+
+    data.action = action + '_track';
+    load_data(data);
+}
+
+// * --- tracking script --- * : END
+
+// * --- balance script --- * : BEGIN
+
+function list_balance(tracks)
+{
+    let list = date_list(tracks);
+    let html = document.createElement('ul');
+
+    for (let keyY in list) {
+        let year = document.createElement('ul');
+        let head = document.createElement('h5');
+        head.innerHTML = 'Jahr ' + keyY;
+        year.append(head);
+        year.className = 'year y-' + keyY;
+        let li;
+
+        for (let keyM in list[keyY]) {
+            let month = document.createElement('ul');
+            let head = document.createElement('h5');
+
+            head.innerHTML = 'Monat ' + monthInYear[keyM];
+            month.append(head);
+            month.className = 'month m-' + keyM;
 
 
+            let week = document.createElement('ul');
+            week.className = 'week';
+            let EoW = false;
+            for (let keyD in list[keyY][keyM]) {
+
+                let day = document.createElement('ul');
+                for (let keyT in list[keyY][keyM][keyD]) {
+                    let date = list[keyY][keyM][keyD][keyT];
+
+                    let diW = dayInWeek[date.getDay()];
+                    let diM = date.getDate();
+
+                    let track = document.createElement('li');
+
+                    track.id = 't-' + tracks[keyT].id;
+                    track.innerHTML = build_trackDisplay(tracks[keyT]);
+
+                    if(!day.head) {
+                        let dayHead = document.createElement('h6');
+                        let header = diW + ' ' + diM;
+                        dayHead.append(header);
+                        day.append(dayHead);
+                        day.head = true;
+                    }
+                    day.append(track);
+
+                    EoW = endOfWeek(dayInWeek.indexOf(diW));
+                }
+                li = document.createElement('li');
+                li.append(day)
+                week.append(li);
+
+                if (EoW) {
+                    li = document.createElement('li');
+                    li.append(week)
+                    month.append(li);
+                    week = document.createElement('div');
+                    week.className = 'week';
+                }
+            }
+            li = document.createElement('li');
+            li.append(month)
+            year.append(li);
+        }
+        li = document.createElement('li');
+        li.append(year)
+        html.append(li);
+    }
+
+    $('.balance .tracking-list').html(html);
+}
+
+// * --- balance script --- * : END
 
 // --- jquery functions ---
-
 $(document).ready(function () {
+
+
     $('a').click(function (e) {
         e.preventDefault();
     });
 
-
 // --- jquery tracking ---
-
-    $('#tracking_list option').click( function () {
-        console.log('this.value');
-        console.log(this.value);
-
-        let track = this.value;
-        track = global_data.request.tracking_list[track];
-        let min = new Date(track.timestamp);
-        let max = new Date();
-
-        min = new Date(
-            min.getFullYear() + '-' +
-            '0' + (min.getMonth() - 2) +
-            '-01 07:00:00');
-
-        $('.change-time--box').removeClass('d-none');
-        $('.change-time--box input[name=type__start_stop]').val(track.type + ' ' + track.start_stop);
-
-        let timeElement = $('.change-time--box input[name=timestamp]');
-        timeElement.val(track.timestamp);
-        timeElement.attr('min', min);
-        timeElement.attr('max', max);
-    });
 
 
 // --- jquery login ---

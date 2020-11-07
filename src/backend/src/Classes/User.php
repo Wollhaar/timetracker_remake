@@ -80,7 +80,7 @@ class User
     {
         return array(
             'id' => $this->id,
-            'username' => $this->username,
+            'username' => $this->getUsername(),
             'email' => $this->email,
             'last_name' => $this->last_name,
             'first_name' => $this->first_name,

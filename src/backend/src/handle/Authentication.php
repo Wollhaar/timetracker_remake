@@ -11,7 +11,7 @@ class Authentication
 {
     static $userManager = null;
     static $credentials = array();
-    static $auth = false;
+    static $auth = null;
 
     public static function setUserManagement()
     {

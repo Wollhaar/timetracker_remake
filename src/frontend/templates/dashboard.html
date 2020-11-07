@@ -21,11 +21,15 @@
             <button type="button" id="btn-pdf" class="btn" onclick="create_pdf()">PDF</button>
         </div>
     </div>
-    <div class="row form-group change-time--box d-none">
+    <div class="row form-group change-track--box d-none">
+        <input type="hidden" name="id">
         <input type="text" name="type__start_stop" class="form-control" disabled>
         <input type="datetime-local" class="form-control" name="timestamp">
         <div class="col-3-lg">
-            <button type="button" id="btn-change" class="btn" onclick="change_time()">&Auml;ndern</button>
+            <button type="button" id="btn-update" class="btn" onclick="update_track('update')">&Auml;ndern</button>
+        </div>
+        <div class="col-3-lg">
+            <button type="button" id="btn-delete" class="btn" onclick="update_track('delete')">L&ouml;schen</button>
         </div>
     </div>
 </div>
