@@ -119,6 +119,37 @@ class Timecontroller
         return self::$tracked;
     }
 
+    public static function getAllTracks()
+    {
+        if (empty(self::$database_connection)) new self();
+
+        $user_id = self::$user->getId();
+
+        $sql = "SELECT * FROM `user_timestamps` 
+                WHERE `user_id` = ?";
+
+        $stmt = self::$database_connection->prepare($sql);
+        $stmt->bind_param('i', $user_id);
+        $success = $stmt->execute();
+        $result = $stmt->get_result();
+
+        foreach ($result as $stamp) {
+            $time = new Time();
+            $time->setData($stamp);
+
+            self::$tracked[$time->getId()] = $stamp;
+        }
+
+        if (!$success) {
+            Session::save(array(
+                'code' => 'E203',
+                'action' => 'tracking_list',
+                'message' => 'Trackinglist could not be loaded.'
+            ), 'error');
+        }
+        return self::$tracked;
+    }
+
     public static function updateTime(array $track)
     {
         if (empty(self::$database_connection)) new self();
@@ -130,9 +161,8 @@ class Timecontroller
                 WHERE `id` = ? 
                 AND `user_id` = ? 
                 LIMIT 1";
-
         $stmt = self::$database_connection->prepare($sql);
-        $stmt->bind_param('dii',
+        $stmt->bind_param('ssi',
             $track['timestamp'],
             $track['id'],
             $user_id
@@ -141,7 +171,7 @@ class Timecontroller
 
         if (!$success) {
             Session::save(array(
-                'code' => 'E203',
+                'code' => 'E204',
                 'action' => 'update_track',
                 'message' => 'Track could not be updated.'
             ), 'error');
@@ -172,7 +202,7 @@ class Timecontroller
 
         if (!$success) {
             Session::save(array(
-                'code' => 'E204',
+                'code' => 'E205',
                 'action' => 'delete_track',
                 'message' => 'Track could not be deleted.'
             ), 'error');

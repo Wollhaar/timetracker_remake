@@ -65,21 +65,15 @@ class Authentication
         )
         {
             self::$auth = true;
-            Session::save(array('load' => array('content' => 'default')), 'action');
+            Session::save(array('load' => 'default'), 'action');
             Session::save($userData->getSummary(), 'user');
         }
         else {
             self::$auth = false;
-            Session::save(array('load' =>
-                array(
-                    'content' => 'login',
-                    'login' => 'failed' // TODO: no need?
-                )
-            ),
-                'action');
+            Session::save(array('load' => 'login'), 'action');
             Session::save(self::$credentials, 'user');
         }
-        Session::save(self::$auth, 'authenticated');
+        Session::save(array('authenticated' => self::$auth), 'session');
 
         return self::$auth;
     }

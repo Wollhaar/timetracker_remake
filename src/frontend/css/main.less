@@ -1,4 +1,5 @@
 @header-background: #6c757d;
+@footer-background: darkred;
 @color-theme-green: yellowgreen;
 @width-login: 400px;
 
@@ -10,6 +11,9 @@
 
 .d-block {
   width: 100%;
+}
+.d-inline {
+  display: inline;
 }
 
 html {
@@ -82,7 +86,14 @@ footer {
   position: fixed;
   bottom: 0;
 
-  background-color: darkred;
+  background-color: @footer-background;
+}
+
+.btn {
+  margin: 0 10px;
+
+  background-image: linear-gradient(whitesmoke, rgba(@color-theme-green, 0.7));
+  border: solid 1px @header-background;
 }
 
 .input-field {

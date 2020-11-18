@@ -1,34 +1,29 @@
-<div class="col-12-lg dashboard">
+<div class="container dashboard">
     <input type="hidden" name="user_id" />
     <div class="row tracking-list">
-        <div class="col-9-lg">
+        <div class="col-12-lg">
             <h4>Trackliste</h4>
             <select class="form-control" id="tracking_list" name="track_id" multiple disabled></select>
         </div>
-        <div class="col-3-lg">
-            <h4>Getrackte Monate</h4>
-            <select class="form-control" id="tracked_months" name="months" multiple disabled></select>
+    </div>
+    <div class="row button-field">
+        <div class="col-md-6">
+            <button type="button" id="btn-work" class="btn track" onclick="work(this.value)" value="start">Arbeit beginnen</button>
+        </div>
+        <div class="col-sm-6">
+            <button type="button" id="btn-break" class="btn track" onclick="break_work(this.value)" value="start">Pause beginnen</button>
         </div>
     </div>
-    <div class="row">
-        <div class="col-4-lg">
-            <button type="button" id="btn-work" class="btn" onclick="work(this.value)" value="start">Arbeit beginnen</button>
+    <div class="row change-track--box d-none">
+        <div class="col-lg-12 form-group">
+            <input type="hidden" name="id">
+            <input type="text" name="type__start_stop" class="form-control" disabled>
+            <input type="datetime-local" class="form-control" name="timestamp">
         </div>
-        <div class="col-4-lg">
-            <button type="button" id="btn-break" class="btn" onclick="break_work(this.value)" value="start">Pause beginnen</button>
-        </div>
-        <div class="col-2-lg">
-            <button type="button" id="btn-pdf" class="btn" onclick="create_pdf()">PDF</button>
-        </div>
-    </div>
-    <div class="row form-group change-track--box d-none">
-        <input type="hidden" name="id">
-        <input type="text" name="type__start_stop" class="form-control" disabled>
-        <input type="datetime-local" class="form-control" name="timestamp">
-        <div class="col-3-lg">
+        <div class="col-sm-6">
             <button type="button" id="btn-update" class="btn" onclick="update_track('update')">&Auml;ndern</button>
         </div>
-        <div class="col-3-lg">
+        <div class="col-sm-6">
             <button type="button" id="btn-delete" class="btn" onclick="update_track('delete')">L&ouml;schen</button>
         </div>
     </div>

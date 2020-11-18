@@ -1,4 +1,4 @@
-var default_load = 'login';
+var default_load = 'home';
 var admin = null;
 var dayInWeek = [null, 'Mo','Di','Mi','Do','Fr','Sa','So'];
 var monthInYear = [null, 'Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
@@ -20,13 +20,22 @@ function setContent(content)
         return;
     }
     console.log('page loaded');
-    $('.wrapper .container').html(content);
+    $('.wrapper .outer-container').html(content);
 
-    let data = $('.wrapper .container').children().attr('class');
-    content_ready(data);
+    content_ready();
 }
 
+function setDefault(data)
+{
+    $('.default-linking').each(function(){
+        this.href = data;
+
+        if (this.innerHTML.search('h1') !== -1) return;
+        this.innerText = capitalize(data);
+    });
+}
 function getData(array_element) {
+
     var array = {};
     if (array_element.toString() === '[object Object]') {
         for (const [key, value] of Object.entries(array_element)) {
@@ -52,13 +61,13 @@ function collectData(from)
     return data;
 }
 
-function load_content(section = 'login')
+function load_content(section = 'home')
 {
     $.post('http://timetracker.de:8080/contentLoader.php', {
         'content': section
     }, function(data, success) {
         if (success) {
-            setContent(data, section);
+            setContent(data);
         }
         else console.log('Content loading failed');
     });
@@ -76,9 +85,8 @@ function load_data(data)
             if (data.action === undefined ||
                 data.request === undefined)
             {
-                console.log('check one');
                 if (data.session === 'destroyed') {
-                    data.action = {load: 'home'};
+                    data.action = data.session.action;
                     console.log('destroyed');
                 }
                 else {
@@ -86,7 +94,6 @@ function load_data(data)
                     return;
                 }
             }
-            console.log('check two');
 
             call_action(data.action);
         }
@@ -98,58 +105,59 @@ function load_data(data)
     });
 }
 
-function content_ready(content)
+function content_ready()
 {
-    if (content.search('dashboard') !== -1) {
+    let data = $('.wrapper .outer-container').children().attr('class');
+
+    if (data.search('dashboard') !== -1) {
         let tracking_list = JSON.parse(JSON.stringify(global_data.request.tracking_list));
-        if (tracking_list !== undefined) { // TODO: check for better conditions
+        if (tracking_list) {
             fill_tracking_list(tracking_list);
 
             let changes = check_track(tracking_list);
-
             for (let key in changes) {
                 change_button(changes[key].type,
                     changes[key].start_stop,
                     changes[key].text);
             }
         }
-
-        $('#tracking_list option').click( function () {
-            change_track(this);
-        });
     }
 
-    if (content.search('balance') !== -1) {
+    if (data.search('balance') !== -1) {
         let tracking_list = JSON.parse(JSON.stringify(global_data.request.tracking_list));
-        if (tracking_list !== undefined) { // TODO: check for better conditions
+        if (tracking_list) {
             list_balance(tracking_list);
+            list_trackedMonths(tracking_list);
         }
-
     }
+
     $('#tracking_list option').click( function () {
         change_track(this);
     });
+
+    adjust_wrapper();
 }
 
 function call_action(action) {
     if (global_data.session.authenticated) {
+        let user = global_data.user;
         logged_in();
-        user_authentication(global_data.user.status);
+        user_authentication(user.status);
 
-        if (action.load.content === 'default') {
-            if (global_data.user.load_default === null) {
-                load_content(default_load);
+        default_load = user ? user.default_landing : default_load;
+        setDefault(default_load);
+
+        if (action.load === 'default') {
+            load_content(default_load);
+
+            let default_element = $('.' + user.default_landing);
+            if (default_element.length === 0) {
+                load_content(user.default_landing);
             }
-            else {
-                let default_element = $('.' + global_data.user.default_landing);
-                if (default_element.length === 0) {
-                    load_content(global_data.user.default_landing);
-                }
-                else content_ready(default_element.attr('class'));
-            }
+            else content_ready(default_element.attr('class'));
         }
 
-        if (action.load.content === 'balance')
+        if (action.load === 'balance')
             load_content('balance');
 
         if (action.update === 'tracking') {
@@ -161,6 +169,7 @@ function call_action(action) {
         if (global_data.session === 'destroyed') {
             global_data.logout = true;
         }
+        setDefault(default_load);
         load_content(action.load);
     }
     console.log('check');
@@ -170,6 +179,78 @@ function call_error(error)
 {
     console.log(error);
 }
+
+
+// --- link-load script --- : BEGIN
+
+function loadDefault(a)
+{
+    let link = a.href.split('/');
+    load_content(link[link.length - 1]);
+}
+
+function loadRegister()
+{
+    load_content('register');
+}
+
+function loadLogin()
+{
+    load_content('login');
+}
+
+function loadBalance()
+{
+    load_data({action: 'tracking_list'});
+}
+
+// --- link-load script --- : END
+
+// --- time script --- : BEGIN
+
+function calculateSeconds(msecs)
+{
+    return Math.round(msecs / 1000);
+}
+
+function calculateMinutes(msecs)
+{
+    return Math.round(msecs / 1000 / 60);
+}
+
+function calculateHours(msecs)
+{
+    return Math.round(msecs / 1000 / 60 / 60);
+}
+
+// calculating time difference
+// source: https://stackoverflow.com/questions/542938/how-do-i-get-the-number-of-days-between-two-dates-in-javascript
+function calculateDifference(time1, time2)
+{
+    return Math.abs(time1 - time2);
+}
+
+function calculateTime(time, what)
+{
+    if (what === 'hours') {
+        time.h = calculateHours(time);
+        time.h = time - time.h;
+        time.m = calculateTime(time, 'minutes');
+    }
+    if (what === 'minutes') {
+        time.m = calculateMinutes(time);
+        time.m = time - time.m;
+        time.m = calculateTime(time, 'seconds');
+    }
+    if (what === 'seconds') {
+        time.s = calculateSeconds(time);
+    }
+
+    return time;
+}
+
+// --- time script --- : END
+
 
 // --- date script --- : BEGIN
 
@@ -233,28 +314,14 @@ function endOfMonth(day, date)
     }
 }
 
-function dayGotSet(dayElement, day) {
-    $(dayElement).find('h6').each(function(key){
-        return (this.innerText.search(day) !== -1);
-    });
-}
-
-function build_trackDisplay(track)
-{
-    return capitalize(track['type']) + ' ' +
-        capitalize(track['start_stop']) + ' ' +
-        track['timestamp'];
-}
-
 // --- date script --- : END
-
 
 function user_load(user)
 {
     if (user['logged']) {
         load_content(default_load);
     }
-    else login_failed();
+else login_failed();
 }
 
 function hide_user()
@@ -266,20 +333,8 @@ function hide_user()
     $('#logout-link').attr('class', 'd-none');
 }
 
-function loadRegister()
-{
-    load_content('register');
-}
 
-function loadLogin()
-{
-    load_content('login');
-}
-
-function loadBalance()
-{
-    load_content('balance');
-}
+// --- content script --- : BEGIN
 
 function update_title(content)
 {
@@ -294,6 +349,45 @@ function update_title(content)
     }
 }
 
+function fill_form_element_with(data, which)
+{
+    let area = $('.' + which + ' input, .' + which + ' select');
+
+    for (const key of Object.keys(area)) {
+        area[key].value = data[area[key].name];
+    }
+}
+
+// --- content script --- : END
+
+// --- style script --- : BEGIN
+
+function adjust_wrapper()
+{
+    let wrapper = $('.wrapper');
+    let height_wrapper_current = parseInt($(wrapper).css('height'));
+    let height_wrapper_css = parseInt(getStyledCSSRules('.wrapper', 'minHeight'));
+
+    if (height_wrapper_current > height_wrapper_css) {
+        let margin_bottom = parseInt($('footer').css('height')) + 30;
+        $(wrapper).css('margin-bottom', margin_bottom);
+    }
+}
+
+// coded from(src): https://stackoverflow.com/questions/16965515/how-to-get-a-style-attribute-from-a-css-class-by-javascript-jquery
+function getStyledCSSRules(what, style)
+{
+    let rules = document.styleSheets[1].rules;
+
+    for (const rule of rules) {
+        if (rule.selectorText === what) {
+            return rule.style[style];
+        }
+    }
+}
+
+// --- style script --- : END
+
 function showRegister()
 {
     if (admin) $('#register-link').attr('class', '');
@@ -302,14 +396,13 @@ function showRegister()
 function register_user()
 {
     var register_form = $('.register-area input');
-    register_form.push($('.register-area select'));
+    register_form.push($('.register-area select')[0]);
     var data = getData(register_form);
 
     load_data(data);
 }
 
 // * --- login script --- * : BEGIN
-
 
 function check_user_status()
 {
@@ -319,6 +412,7 @@ function check_user_status()
 
     load_data(data);
 }
+
 
 function login()
 {
@@ -367,7 +461,20 @@ function logout()
 
 // * --- tracking script --- * : BEGIN
 
+function dayGotSet(dayElement, day) {
+    $(dayElement).find('h6').each(function(key){
+        return (this.innerText.search(day) !== -1);
+    });
+}
 
+
+
+function build_trackDisplay(track)
+{
+    return capitalize(track['type']) + ' ' +
+        capitalize(track['start_stop']) + ' ' +
+        track['timestamp'];
+}
 
 function work(start_stop)
 {
@@ -441,22 +548,20 @@ function check_list(tracks)
     return tracks;
 }
 
-function fill_element_with(data, id) {}
-
 function fill_tracking_list(tracks)
 {
-    var content_row = [];
+    var track_list = [];
 
     for (let key in tracks) {
-        content_row[key] = document.createElement('option');
-        content_row[key].value = tracks[key]['id'];
-        content_row[key].innerHTML =
+        track_list[key] = document.createElement('option');
+        track_list[key].value = tracks[key]['id'];
+        track_list[key].innerHTML =
                     capitalize(tracks[key]['type']) + ' ' +
                     capitalize(tracks[key]['start_stop']) + ' ' +
                     tracks[key]['timestamp'];
     }
 
-    $('#tracking_list').html(content_row);
+    $('#tracking_list').html(track_list);
 }
 
 function change_track(element)
@@ -502,6 +607,7 @@ function update_track(action) {
 
 function list_balance(tracks)
 {
+    tracks = JSON.parse(JSON.stringify(tracks));
     let list = date_list(tracks);
     let html = document.createElement('ul');
 
@@ -524,6 +630,10 @@ function list_balance(tracks)
 
             let week = document.createElement('ul');
             week.className = 'week';
+            li = document.createElement('li');
+            li.append(week);
+            month.append(li);
+
             let EoW = false;
             for (let keyD in list[keyY][keyM]) {
 
@@ -542,7 +652,10 @@ function list_balance(tracks)
                     if(!day.head) {
                         let dayHead = document.createElement('h6');
                         let header = diW + ' ' + diM;
+                        let trackedDayTime = build_trackedTime(tracks, list[keyY][keyM][keyD]);
+
                         dayHead.append(header);
+                        dayHead.append(trackedDayTime);
                         day.append(dayHead);
                         day.head = true;
                     }
@@ -551,38 +664,134 @@ function list_balance(tracks)
                     EoW = endOfWeek(dayInWeek.indexOf(diW));
                 }
                 li = document.createElement('li');
-                li.append(day)
+                li.append(day);
                 week.append(li);
 
                 if (EoW) {
-                    li = document.createElement('li');
-                    li.append(week)
-                    month.append(li);
-                    week = document.createElement('div');
+                    week = document.createElement('ul');
                     week.className = 'week';
+                    li = document.createElement('li');
+                    li.append(week);
+                    month.append(li);
                 }
             }
             li = document.createElement('li');
-            li.append(month)
+            li.append(month);
             year.append(li);
         }
         li = document.createElement('li');
-        li.append(year)
+        li.append(year);
         html.append(li);
     }
 
     $('.balance .tracking-list').html(html);
 }
 
+function list_trackedMonths(tracks)
+{
+    let list = date_list(tracks);
+    let html = [];
+
+    for (let keyY in list) {
+        for (let keyM in list[keyY]) {
+            let opt = document.createElement('option');
+            opt.value = keyY + '-' + keyM;
+            opt.innerText = 'Jahr ' + keyY + ' ' + monthInYear[keyM];
+            html.push(opt);
+        }
+    }
+
+    $('#tracked_months').html(html);
+}
+
+function build_trackedTime(tracks, day)
+{
+    let input = document.createElement('input');
+    let text = document.createElement('span');
+    let set = document.createElement('div');
+
+    let time = calculate_trackedTime(tracks, day);
+
+
+    input.type = 'hidden';
+    input.name = 'work_time';
+    input.value = time.calc;
+
+    text.innerText =
+        calculateHours(time.h) +
+        ':' +
+        calculateMinutes(time.m);
+
+    set.class = 'd-inline';
+    set.append(input);
+    set.append(text);
+    return set;
+}
+
+function calculate_trackedTime(tracks, day)
+{
+    let time = {};
+    let counters = {
+        'work_start': 0,
+        'work_stop': 0,
+        'break_start': 0,
+        'break_stop': 0
+    };
+
+    for (const id in day) {
+        if (tracks[id].toString() !== Object.prototype.toString()) continue;
+        let loopCounter = counters[tracks[id].type + '_' + tracks[id].start_stop]++;
+
+        time[loopCounter] = {};
+        time[loopCounter][tracks[id].type] = {};
+        time[loopCounter][tracks[id].type][tracks[id].start_stop] = day[id].getTime();
+
+        console.log('count: ' + loopCounter);
+        console.log(time[loopCounter]);
+
+        if (!time.id)
+            time.id = 'work-day:' +
+                day[id].getFullYear() +
+                '-' +
+                (day[id].getMonth() + 1) +
+                '-' +
+                day[id].getDate();
+    }
+
+    time.calc = {'work': 0, 'break': 0};
+    for (const key in time) {
+        if (typeof time[key] !== 'object') continue;
+
+        if (!time[key].work) {
+            time[key].work = {'start': 0, 'stop': 0};
+        }
+        if (!time[key].break) {
+            time[key].break = {'start': 0, 'stop': 0};
+        }
+
+        time.calc.work += time[key].work.stop - time[key].work.start;
+        time.calc.break += time[key].break.stop - time[key].break.start;
+        console.log('work-calc: ' + time.calc.work);
+        console.log('break-calc: ' + time.calc.break);
+    }
+    time.calc = time.calc.work - time.calc.break;
+    time = Object.assign(calculateTime(time.calc), time);
+    console.log(time);
+
+    return time;
+}
+
 // * --- balance script --- * : END
 
 // --- jquery functions ---
-$(document).ready(function () {
 
+$(document).ready(function () {
 
     $('a').click(function (e) {
         e.preventDefault();
     });
+
+    adjust_wrapper();
 
 // --- jquery tracking ---
 

@@ -35,7 +35,6 @@ class Request
 
             case 'logout':
                 Authentication::destroy();
-                self::$data = null;
                 break;
 
             case 'register':
@@ -47,32 +46,21 @@ class Request
                 break;
 
             case 'check_session':
-                if (
-                    empty(Session::load('user')['id']) &&
-                    Authentication::$auth === false
-                ) {
-                    echo json_encode( array (
-                        "session" => array (
-                            "authenticated" => Authentication::$auth
-                        ),
-                        "action" => array (
-                            "load" => 'home'
-                        ),
-                        "request" => array (
-                            "action" => 'check_session'
-                        ),
-                        "error" => array (
-                            "code" => "E121",
-                            "message" => "Session not authenticated."
-                        ),
-                        'request:' => self::$data
-                    ));
-                    die;
+                if (Session::load('session')['authenticated'] !== true) {
+                    Session::save(array ('load' => 'home'), 'action');
+                    Session::save(array (), 'user');
+
+                    Session::save(array (
+                        'code' => 'E121',
+                        'message' => 'Session not authenticated.'
+                    ), 'error');
+
+                    Session::save(self::$data, 'request');
                 }
                 else {
                     Authentication::$auth = true;
-
                     self::$data['tracking_list'] = $this->getTracks();
+                    Session::save(array('load' => 'default'), 'action');
                 }
                 break;
 
@@ -86,6 +74,12 @@ class Request
                 break;
 
             case 'tracking_list':
+                $user = new User();
+                $user->setData(Session::load('user'));
+                self::$timeManager->setUser($user);
+
+                self::$data['tracking_list'] = self::$timeManager::getAllTracks();
+                Session::save(array('load' => 'balance'), 'action');
                 break;
 
             case 'update_track':
@@ -117,13 +111,11 @@ class Request
                 break;
 
             default:
-                Session::save(array('error' =>
-                    array(
+                Session::save(array(
                         'code' => 'E120',
                         'action' => self::$data['action'] ?? 'none',
-                        'message' => 'Action got not found')
-                ), 'action');
-                Session::save(UserController::$user->getSummary(), 'user');
+                        'message' => 'Action got not found'
+                ), 'error');
         }
     }
 

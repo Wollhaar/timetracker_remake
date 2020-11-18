@@ -1,5 +1,19 @@
-<div class="balance">
+<div class="container balance">
     <h3>Stundenbilanz</h3>
-    <div class="tracking-list">
+    <div class="row">
+        <div class="col-lg-9">
+            <h4>Gesamte Zeit</h4>
+            <div class="tracking-list"></div>
+        </div>
+
+        <div class="col-lg-3 tracked-months">
+            <div class="row col-lg-12">
+                <h4><label for="tracked_months">Getrackte Monate</label></h4>
+                <select class="form-control" id="tracked_months" name="months" multiple></select>
+            </div>
+            <div class="row col-lg-12">
+                <button type="button" id="btn-pdf" class="btn" onclick="create_pdf()">PDF</button>
+            </div>
+        </div>
     </div>
 </div>

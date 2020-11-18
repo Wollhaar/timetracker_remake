@@ -49,6 +49,19 @@ class Session
         session_destroy();
     }
 
+
+    public static function status()
+    {
+        echo '{"status": "' .
+            session_status() .
+            '","session": "' .
+            json_encode($_SESSION) .
+            '","empty": "' .
+            json_encode(empty($_SESSION['user']['id'])) .
+            '"}';
+
+    }
+
     public static function loadTestObject(String $index): Session
     {
         if (isset($_SESSION[$index]) && $_SESSION[$index] instanceof Session) {

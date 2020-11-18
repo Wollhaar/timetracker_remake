@@ -38,26 +38,31 @@ class UserController
         ) {
             return false;
         }
+        Authentication::fillCredentials($data);
+        $password = Authentication::hashPassword();
+
+        $data = self::$user->getSummary();
+        $data['password_hash'] = self::$user->getPasswordHash();
 
         $sql = "INSERT INTO users (
                     `username`, 
                     `password`, 
                     `email`, 
-                    `last_name`, 
                     `first_name`, 
+                    `last_name`, 
                     `employee_nr`, 
                     `hired`, 
-                    `status`
+                    `status` 
                 ) 
                 VALUES (?,?,?,?,?,?,?,?)";
 
         $stmt = self::$database_connection->prepare($sql);
-        $stmt->bind_param('sssssidi',
+        $stmt->bind_param('ssssssss',
             $data['username'],
             $data['password_hash'],
             $data['email'],
-            $data['last_name'],
             $data['first_name'],
+            $data['last_name'],
             $data['employee_nr'],
             $data['hired'],
             $data['status']
@@ -68,7 +73,7 @@ class UserController
         if ($res) {
             self::$user->setData($data);
         }
-        else Session::save(array('code' => 'E111','message' => 'Register failed'), 'error');
+        else Session::save(array('code' => 'E111','message' => 'Register failed','data' => $data), 'error');
     }
 
     public function getUser()

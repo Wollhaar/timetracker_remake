@@ -17,10 +17,12 @@
 </head>
 <body>
 <header>
-    <h1>Timetracking</h1>
+    <a href="default" class="default-linking" onclick="loadDefault(this)">
+        <h1>Timetracking</h1>
+    </a>
     <ul>
         <li id="user-field" class="d-none">{User}</li>
-        <li id="default-link" class="default-linking"><a href="login" onclick="loadLogin()">Login</a></li>
+        <li id="default-link"><a href="default" class="default-linking" onclick="loadDefault(this)">{{default}}</a></li>
         <li id="login-link"><a href="login" onclick="loadLogin()">Login</a></li>
         <li id="logout-link" class="d-none"><a href="logout" onclick="logout()">Logout</a></li>
         <li id="balance-link"><a href="balance" onclick="loadBalance()">Bilanz</a></li>
@@ -29,7 +31,7 @@
 </header>
 
 <div class="wrapper">
-    <div class="container"></div>
+    <div class="outer-container"></div>
 </div>
 <footer>
     <button class="form-control" onclick="load_data({action:'check_session'})">Load Session</button>
