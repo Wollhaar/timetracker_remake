@@ -19,9 +19,6 @@ class Handler
 
         Session::create();
 
-        if ($parameters['data']['action'] == 'register')
-            Session::save($parameters['data'], 'register_user');
-
         if (session_status() === PHP_SESSION_ACTIVE) {
             self::$session = array('id' => Session::id());
 
@@ -49,7 +46,6 @@ class Handler
             $response->fill(Session::load('user'), 'user');
             $response->fill(Session::load('action'), 'action');
 //        $response->fill(Request::$timeManager::$tracked, 'track');
-//            $response->fill(Session::load('register_user'), 'register');
 
             if (!empty(Session::load('error')))
                 $response->fill(Session::load('error'), 'error');

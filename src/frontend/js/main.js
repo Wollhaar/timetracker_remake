@@ -85,7 +85,7 @@ function load_data(data)
             if (data.action === undefined ||
                 data.request === undefined)
             {
-                if (data.session === 'destroyed') {
+                if (data.session.session === 'destroyed') {
                     data.action = data.session.action;
                     console.log('destroyed');
                 }
@@ -210,17 +210,17 @@ function loadBalance()
 
 function calculateSeconds(msecs)
 {
-    return Math.round(msecs / 1000);
+    return Math.floor(msecs / 1000);
 }
 
 function calculateMinutes(msecs)
 {
-    return Math.round(msecs / 1000 / 60);
+    return Math.floor(msecs / 1000 / 60);
 }
 
 function calculateHours(msecs)
 {
-    return Math.round(msecs / 1000 / 60 / 60);
+    return Math.floor(msecs / 1000 / 60 / 60);
 }
 
 // calculating time difference
@@ -233,19 +233,19 @@ function calculateDifference(time1, time2)
 function calculateTime(time, what)
 {
     if (what === 'hours') {
-        time.h = calculateHours(time);
-        time.h = time - time.h;
-        time.m = calculateTime(time, 'minutes');
+        time.h = calculateHours(time.calc);
+        time.rest = time.calc - (time.h * 60 * 60 * 1000);
+        time = Object.assign(calculateTime(time, 'minutes'));
     }
     if (what === 'minutes') {
-        time.m = calculateMinutes(time);
-        time.m = time - time.m;
-        time.m = calculateTime(time, 'seconds');
+        time.m = calculateMinutes(time.rest);
+        time.rest = time.rest - (time.m * 60 * 1000);
+        time = Object.assign(calculateTime(time, 'seconds'));
     }
     if (what === 'seconds') {
-        time.s = calculateSeconds(time);
+        time.s = calculateSeconds(time.rest);
+        time.rest = time.rest - (time.s * 1000);
     }
-
     return time;
 }
 
@@ -696,7 +696,7 @@ function list_trackedMonths(tracks)
         for (let keyM in list[keyY]) {
             let opt = document.createElement('option');
             opt.value = keyY + '-' + keyM;
-            opt.innerText = 'Jahr ' + keyY + ' ' + monthInYear[keyM];
+            opt.innerText = monthInYear[keyM].substr(0, 3) + ' ' + keyY;
             html.push(opt);
         }
     }
@@ -710,17 +710,14 @@ function build_trackedTime(tracks, day)
     let text = document.createElement('span');
     let set = document.createElement('div');
 
-    let time = calculate_trackedTime(tracks, day);
+    let time = calculate_trackedTime(build_trackedTimeList(tracks, day));
 
 
     input.type = 'hidden';
     input.name = 'work_time';
     input.value = time.calc;
 
-    text.innerText =
-        calculateHours(time.h) +
-        ':' +
-        calculateMinutes(time.m);
+    text.innerText = time.h + ':' + time.m;
 
     set.class = 'd-inline';
     set.append(input);
@@ -728,8 +725,7 @@ function build_trackedTime(tracks, day)
     return set;
 }
 
-function calculate_trackedTime(tracks, day)
-{
+function build_trackedTimeList(tracks, day) {
     let time = {};
     let counters = {
         'work_start': 0,
@@ -742,12 +738,9 @@ function calculate_trackedTime(tracks, day)
         if (tracks[id].toString() !== Object.prototype.toString()) continue;
         let loopCounter = counters[tracks[id].type + '_' + tracks[id].start_stop]++;
 
-        time[loopCounter] = {};
-        time[loopCounter][tracks[id].type] = {};
+        if (!time[loopCounter]) time[loopCounter] = {};
+        if (!time[loopCounter][tracks[id].type]) time[loopCounter][tracks[id].type] = {};
         time[loopCounter][tracks[id].type][tracks[id].start_stop] = day[id].getTime();
-
-        console.log('count: ' + loopCounter);
-        console.log(time[loopCounter]);
 
         if (!time.id)
             time.id = 'work-day:' +
@@ -758,25 +751,33 @@ function calculate_trackedTime(tracks, day)
                 day[id].getDate();
     }
 
+    return time;
+}
+
+function calculate_trackedTime(time)
+{
     time.calc = {'work': 0, 'break': 0};
     for (const key in time) {
-        if (typeof time[key] !== 'object') continue;
+        if (isNaN(parseInt(key))) continue;
 
-        if (!time[key].work) {
-            time[key].work = {'start': 0, 'stop': 0};
+        if (!time[key].work) time[key].work = {'start': 0, 'stop': 0};
+        else {
+            if (!(time[key].work.start || time[key].work.stop)) {
+                time[key].work = {'start': 0, 'stop': 0};
+            }
         }
-        if (!time[key].break) {
-            time[key].break = {'start': 0, 'stop': 0};
+        if (!time[key].break) time[key].break = {'start': 0, 'stop': 0};
+        else {
+            if (!(time[key].break.start || time[key].break.stop)) {
+                time[key].break = {'start': 0, 'stop': 0};
+            }
         }
 
         time.calc.work += time[key].work.stop - time[key].work.start;
         time.calc.break += time[key].break.stop - time[key].break.start;
-        console.log('work-calc: ' + time.calc.work);
-        console.log('break-calc: ' + time.calc.break);
     }
     time.calc = time.calc.work - time.calc.break;
-    time = Object.assign(calculateTime(time.calc), time);
-    console.log(time);
+    time = Object.assign(calculateTime(time, 'hours'), time);
 
     return time;
 }
