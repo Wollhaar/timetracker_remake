@@ -23,9 +23,9 @@ class Session
      * @param String $index
      * @return mixed|null
      */
-    public static function load(String $index)
+    public static function load(String $index): array
     {
-        return $_SESSION[$index] ?? null;
+        return $_SESSION[$index] ?? array();
     }
 
     public static function id(): string {

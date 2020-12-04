@@ -6,19 +6,19 @@ namespace DavidGoraj\Classes;
 
 class User
 {
-    private $id = null;
-    private $username = null;
-    private $password_hash = null;
-    private $email = null;
-    private $last_name = null;
-    private $first_name = null;
-    private $employee_nr = null;
-    private $hired = null;
-    private $status = null;
-    private $default_landing = null;
+    private $id;
+    private $username;
+    private $password_hash;
+    private $email;
+    private $last_name;
+    private $first_name;
+    private $employee_nr;
+    private $hired;
+    private $status;
+    private $default_landing;
 
     /**
-     * @return null
+     * @return int
      */
     public function getId()
     {
@@ -26,7 +26,7 @@ class User
     }
 
     /**
-     * @return null
+     * @return string
      */
     public function getUsername()
     {
@@ -34,7 +34,7 @@ class User
     }
 
     /**
-     * @return null
+     * @return string
      */
     public function getPasswordHash()
     {
@@ -42,7 +42,7 @@ class User
     }
 
     /**
-     * @return null
+     * @return string
      */
     public function getEmail()
     {
@@ -50,7 +50,23 @@ class User
     }
 
     /**
-     * @return null
+     * @return string
+     */
+    public function getLastname()
+    {
+        return $this->last_name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFirstname()
+    {
+        return $this->first_name;
+    }
+
+    /**
+     * @return int
      */
     public function getEmployeeNr()
     {
@@ -58,7 +74,7 @@ class User
     }
 
     /**
-     * @return null
+     * @return string
      */
     public function getHired()
     {
@@ -66,7 +82,7 @@ class User
     }
 
     /**
-     * @return null
+     * @return int
      */
     public function getStatus()
     {

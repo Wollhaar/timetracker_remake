@@ -10,7 +10,7 @@ use DavidGoraj\handle\Database;
 use DavidGoraj\handle\Session;
 use mysql_xdevapi\Exception;
 
-class Timecontroller
+class TimeController
 {
     static $database_connection;
     static $tracked = Array();
@@ -23,7 +23,7 @@ class Timecontroller
         }
     }
 
-    public function setUser(User $user)
+    public static function setUser(User $user)
     {
         self::$user = $user;
     }

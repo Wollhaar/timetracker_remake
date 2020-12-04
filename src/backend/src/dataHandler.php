@@ -1,15 +1,8 @@
 <?php
 use DavidGoraj\Helper\Controller\Handler;
-
-
 require '../config.php';
 
-$request = $_REQUEST;
-$post = $_POST;
-
-if (!is_string($request))$request = json_encode($request);
-
-Handler::handleRequest($request);
+Handler::handleRequest(json_encode($_REQUEST));
 $response = Handler::prepareToRespond();
 
 $response->output();

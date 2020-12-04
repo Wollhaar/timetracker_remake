@@ -43,6 +43,9 @@ class UserController
 
         $data = self::$user->getSummary();
         $data['password_hash'] = self::$user->getPasswordHash();
+        Session::save(array(
+
+        ), 'pHash_control');$data['password_hash'] = self::$user->getPasswordHash();
 
         $sql = "INSERT INTO users (
                     `username`, 

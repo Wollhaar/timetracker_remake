@@ -18,15 +18,16 @@ class Handler
         $parameters = json_decode($parameters, true);
 
         Session::create();
-
         if (session_status() === PHP_SESSION_ACTIVE) {
             self::$session = array('id' => Session::id());
 
             self::$request = new Request($parameters['data']);
-            self::$request->call();
+            self::$request::handle();
+
+
+            Action::call();
 
             self::$session = array_merge(self::$session, Session::load('session'));
-
             if (empty(Session::id())) {
                 self::$session = array(
                     'session' => 'destroyed',
@@ -41,6 +42,11 @@ class Handler
         $response = new Response();
         $response->fill(self::$session, 'session');
         $response->fill(Request::getData(), 'request');
+        $response->fill(Action::getResults(), 'results');
+//        $response->fill(array(
+//            'root' => $_SERVER['DOCUMENT_ROOT'],
+//            'DIR' => __DIR__,
+//        ), 'paths');
 
         if (session_status() === PHP_SESSION_ACTIVE) {
             $response->fill(Session::load('user'), 'user');

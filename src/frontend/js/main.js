@@ -11,6 +11,7 @@ $(document).ready(function () {
 function init()
 {
     check_user_status();
+    setDefault(default_load);
 }
 
 function setContent(content)
@@ -83,7 +84,7 @@ function load_data(data)
             global_data = data;
 
             if (data.action === undefined ||
-                data.request === undefined)
+                data.results === undefined)
             {
                 if (data.session.session === 'destroyed') {
                     data.action = data.session.action;
@@ -110,7 +111,7 @@ function content_ready()
     let data = $('.wrapper .outer-container').children().attr('class');
 
     if (data.search('dashboard') !== -1) {
-        let tracking_list = JSON.parse(JSON.stringify(global_data.request.tracking_list));
+        let tracking_list = JSON.parse(JSON.stringify(global_data.results.tracking_list));
         if (tracking_list) {
             fill_tracking_list(tracking_list);
 
@@ -124,10 +125,13 @@ function content_ready()
     }
 
     if (data.search('balance') !== -1) {
-        let tracking_list = JSON.parse(JSON.stringify(global_data.request.tracking_list));
+        let tracking_list = JSON.parse(JSON.stringify(global_data.results.tracking_list));
         if (tracking_list) {
             list_balance(tracking_list);
             list_trackedMonths(tracking_list);
+
+            build_timeMonth();
+            jquery_balance();
         }
     }
 
@@ -161,7 +165,11 @@ function call_action(action) {
             load_content('balance');
 
         if (action.update === 'tracking') {
-            fill_tracking_list(global_data.request.tracking_list);
+            fill_tracking_list(global_data.results.tracking_list);
+        }
+
+        if (action.call === 'docu') {
+            window.open(global_data.results.created.docu);
         }
     }
     else {
@@ -538,7 +546,7 @@ function change_button(type, start_stop, text)
     $(btn).val(start_stop);
 }
 
-function check_list(tracks)
+function check_list(tracks) // TODO: unnecessary?
 {
     let list = $('#tracking_list option');
 
@@ -567,7 +575,7 @@ function fill_tracking_list(tracks)
 function change_track(element)
 {
     let track = element.value;
-    track = global_data.request.tracking_list[track];
+    track = global_data.results.tracking_list[track];
     let min = new Date(track.timestamp);
     let max = new Date();
 
@@ -655,8 +663,8 @@ function list_balance(tracks)
                         let trackedDayTime = build_trackedTime(tracks, list[keyY][keyM][keyD]);
 
                         dayHead.append(header);
-                        dayHead.append(trackedDayTime);
                         day.append(dayHead);
+                        day.append(trackedDayTime);
                         day.head = true;
                     }
                     day.append(track);
@@ -714,6 +722,7 @@ function build_trackedTime(tracks, day)
 
 
     input.type = 'hidden';
+    input.id = time.id;
     input.name = 'work_time';
     input.value = time.calc;
 
@@ -782,9 +791,94 @@ function calculate_trackedTime(time)
     return time;
 }
 
+function calculateMonth(y, m)
+{
+    let i = 0;
+    let list = [];
+
+    for (let value of $('.y-' + y + ' .m-' + m + ' input[name=work_time]')) {
+        list.push(value.value);
+    }
+
+    return list.reduce(function(accumulate, current){
+        current = parseFloat(current);
+        return isNaN(current) ? accumulate : accumulate + current;
+    }, i);
+}
+
+function build_timeMonth()
+{
+    $('.balance .year').each(function() {
+        const y = $(this).children('h5').html().split(' ')[1];
+
+        $(this).find('.month').each(function() {
+            const m = $(this).children('h5').html().split(' ')[1];
+            let time = calculateMonth(y, monthInYear.indexOf(m));
+
+            let time_element = document.createElement('input');
+            time_element.type = 'hidden';
+            time_element.className = 'month_time';
+            time_element.value = time;
+
+            this.append(time_element);
+        });
+    });
+}
+
 // * --- balance script --- * : END
 
+// * --- document script --- * : BEGIN
+
+function create_pdf()
+{
+    const months = $('#tracked_months').val();
+    let copiedMonths = JSON.parse(JSON.stringify(months));
+    let area = copiedMonths.shift();
+    if (copiedMonths.length) area += '_' + copiedMonths.pop();
+
+    let timeList = build_timeList(months);
+
+    for (let y in timeList) {
+        for (let m in timeList[y]) {
+            timeList[y][m]['time'] = $('.y-' + y + ' .m-' + m + ' .month_time').val();
+            $('.y-' + y + ' .m-' + m + ' h6').each(function() {
+                let d = $(this).text().split(' ')[1];
+                timeList[y][m][d] = $('input[id$=' + y + '-' + m + '-' + d + ']').val();
+            });
+        }
+    }
+
+    load_data({action: 'document', time_list: timeList, area: area});
+}
+
+function build_timeList(list)
+{
+    let newList = {};
+    for (let i in list) {
+        let val = list[i].split('-');
+        if(!newList[val[0]]) newList[val[0]] = {};
+        newList[val[0]][val[1]] = {};
+    }
+    return newList;
+}
+
+// * --- document script --- * : END
+
 // --- jquery functions ---
+
+function jquery_balance()
+{
+    $('.balance h6').click(function(){
+        if ($(this).nextAll('li').css('display') === 'list-item') {
+            $(this).nextAll('li').hide();
+        }
+
+        if ($(this).nextAll('li').css('display') === 'none') {
+            $(this).nextAll('li').show();
+        }
+
+    });
+}
 
 $(document).ready(function () {
 
