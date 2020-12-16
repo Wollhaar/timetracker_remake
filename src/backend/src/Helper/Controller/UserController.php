@@ -29,7 +29,7 @@ class UserController
         self::$user->setPasswordHash($data['password_hash']);
     }
 
-    public static function registerUser(Array $data)
+    public static function registerUser(Array $data): bool
     {
         if (
             empty($data['username']) ||
@@ -39,13 +39,9 @@ class UserController
             return false;
         }
         Authentication::fillCredentials($data);
-        $password = Authentication::hashPassword();
 
         $data = self::$user->getSummary();
-        $data['password_hash'] = self::$user->getPasswordHash();
-        Session::save(array(
-
-        ), 'pHash_control');$data['password_hash'] = self::$user->getPasswordHash();
+        $password_hash = self::$user->getPasswordHash();
 
         $sql = "INSERT INTO users (
                     `username`, 
@@ -62,7 +58,7 @@ class UserController
         $stmt = self::$database_connection->prepare($sql);
         $stmt->bind_param('ssssssss',
             $data['username'],
-            $data['password_hash'],
+            $password_hash,
             $data['email'],
             $data['first_name'],
             $data['last_name'],
@@ -75,6 +71,7 @@ class UserController
 
         if ($res) {
             self::$user->setData($data);
+            return true;
         }
         else Session::save(array('code' => 'E111','message' => 'Register failed','data' => $data), 'error');
     }

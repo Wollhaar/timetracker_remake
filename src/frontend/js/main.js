@@ -14,6 +14,7 @@ function init()
     setDefault(default_load);
 }
 
+// setzen des aus der Schnittstelle geladenen contents
 function setContent(content)
 {
     if (typeof content === 'undefined') {
@@ -26,6 +27,7 @@ function setContent(content)
     content_ready();
 }
 
+// Default setzen des Headers und defaultlink
 function setDefault(data)
 {
     $('.default-linking').each(function(){
@@ -35,6 +37,8 @@ function setDefault(data)
         this.innerText = capitalize(data);
     });
 }
+
+// Funktion zum abgreifen von Daten aus HTMLObjekten
 function getData(array_element) {
 
     var array = {};
@@ -62,6 +66,7 @@ function collectData(from)
     return data;
 }
 
+// schnittstelle zum content
 function load_content(section = 'home')
 {
     $.post('http://timetracker.de:8080/contentLoader.php', {
@@ -74,6 +79,7 @@ function load_content(section = 'home')
     });
 }
 
+// schnittstelle zum Backend
 function load_data(data)
 {
     $.post('http://backend.timetracker.de:8090/dataHandler.php', {
@@ -110,8 +116,9 @@ function content_ready()
 {
     let data = $('.wrapper .outer-container').children().attr('class');
 
+    // datenbefüllung des dashboards
     if (data.search('dashboard') !== -1) {
-        let tracking_list = JSON.parse(JSON.stringify(global_data.results.tracking_list));
+        let tracking_list = JSON.parse(JSON.stringify(global_data.results.created.tracking_list));
         if (tracking_list) {
             fill_tracking_list(tracking_list);
 
@@ -124,8 +131,9 @@ function content_ready()
         }
     }
 
+    // datenbefüllung der Bilanz
     if (data.search('balance') !== -1) {
-        let tracking_list = JSON.parse(JSON.stringify(global_data.results.tracking_list));
+        let tracking_list = JSON.parse(JSON.stringify(global_data.results.created.tracking_list));
         if (tracking_list) {
             list_balance(tracking_list);
             list_trackedMonths(tracking_list);
@@ -142,6 +150,7 @@ function content_ready()
     adjust_wrapper();
 }
 
+// ausführen der vom backend vorgegebenen zu ausführenden aktion
 function call_action(action) {
     if (global_data.session.authenticated) {
         let user = global_data.user;
@@ -151,6 +160,7 @@ function call_action(action) {
         default_load = user ? user.default_landing : default_load;
         setDefault(default_load);
 
+        // laden des default gesetzten contents
         if (action.load === 'default') {
             load_content(default_load);
 
@@ -161,11 +171,10 @@ function call_action(action) {
             else content_ready(default_element.attr('class'));
         }
 
-        if (action.load === 'balance')
-            load_content('balance');
+        if (action.load === 'balance') load_content('balance');
 
         if (action.update === 'tracking') {
-            fill_tracking_list(global_data.results.tracking_list);
+            fill_tracking_list(global_data.results.created.tracking_list);
         }
 
         if (action.call === 'docu') {
@@ -173,14 +182,15 @@ function call_action(action) {
         }
     }
     else {
-        console.log('load');
+        // falls userauthentifizierung nicht erfolgreich
+        // prüfung ob session zerstört und laden
+        // des default gesetzten contents
         if (global_data.session === 'destroyed') {
             global_data.logout = true;
         }
         setDefault(default_load);
         load_content(action.load);
     }
-    console.log('check');
 }
 
 function call_error(error)
@@ -238,18 +248,22 @@ function calculateDifference(time1, time2)
     return Math.abs(time1 - time2);
 }
 
+// umrechnung der übergebenen zeit in stunden, minuten sekunden
 function calculateTime(time, what)
 {
+    // umrechnung der Zeit in Stunden
     if (what === 'hours') {
         time.h = calculateHours(time.calc);
         time.rest = time.calc - (time.h * 60 * 60 * 1000);
         time = Object.assign(calculateTime(time, 'minutes'));
     }
+    // umrechnung der verbliebenen Restzeit in Minuten
     if (what === 'minutes') {
         time.m = calculateMinutes(time.rest);
         time.rest = time.rest - (time.m * 60 * 1000);
         time = Object.assign(calculateTime(time, 'seconds'));
     }
+    // umrechnung der verbliebenen Restzeit in Sekunden
     if (what === 'seconds') {
         time.s = calculateSeconds(time.rest);
         time.rest = time.rest - (time.s * 1000);
@@ -262,6 +276,7 @@ function calculateTime(time, what)
 
 // --- date script --- : BEGIN
 
+// aufbau der aufgezeichneten Stempel in einer (nach [Jahr][Monat][Tag] sortiert) Liste
 function date_list(tracks)
 {
     let list = {};
@@ -370,6 +385,8 @@ function fill_form_element_with(data, which)
 
 // --- style script --- : BEGIN
 
+// korrektur der höhe des wrappers
+// src: https://stackoverflow.com/questions/324486/how-do-you-read-css-rule-values-with-javascript
 function adjust_wrapper()
 {
     let wrapper = $('.wrapper');
@@ -401,6 +418,7 @@ function showRegister()
     if (admin) $('#register-link').attr('class', '');
 }
 
+// userregistrierung
 function register_user()
 {
     var register_form = $('.register-area input');
@@ -430,6 +448,7 @@ function login()
     load_data(data);
 }
 
+// setzen der daten des eingeloggten user im frontend
 function logged_in()
 {
     var user_element = $('#user-field');
@@ -469,6 +488,7 @@ function logout()
 
 // * --- tracking script --- * : BEGIN
 
+// Prüfung ob der Header eines Tages bereits gesetzt
 function dayGotSet(dayElement, day) {
     $(dayElement).find('h6').each(function(key){
         return (this.innerText.search(day) !== -1);
@@ -476,7 +496,7 @@ function dayGotSet(dayElement, day) {
 }
 
 
-
+// Aufbau eines Stempels für die Stempelliste
 function build_trackDisplay(track)
 {
     return capitalize(track['type']) + ' ' +
@@ -494,6 +514,7 @@ function break_work(start_stop)
     track('break', start_stop);
 }
 
+// das Stempeln
 function track(type, start_stop)
 {
     let data = {
@@ -506,6 +527,7 @@ function track(type, start_stop)
     load_data(data);
 }
 
+// überprüfung der tracks zum stempeln der nächsten Zeiten
 function check_track(tracking)
 {
     let list = {};
@@ -538,6 +560,7 @@ function check_track(tracking)
     return list;
 }
 
+// änderung eines Buttons
 function change_button(type, start_stop, text)
 {
     let btn = $('#btn-' + type);
@@ -546,16 +569,7 @@ function change_button(type, start_stop, text)
     $(btn).val(start_stop);
 }
 
-function check_list(tracks) // TODO: unnecessary?
-{
-    let list = $('#tracking_list option');
-
-    for (let key in list) {
-        if (list[key] === tracks[key]) delete tracks[key];
-    }
-    return tracks;
-}
-
+// befüllen der Stempelliste
 function fill_tracking_list(tracks)
 {
     var track_list = [];
@@ -572,10 +586,12 @@ function fill_tracking_list(tracks)
     $('#tracking_list').html(track_list);
 }
 
+// aufsetzen des zu ändernden Stempels
+// src: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local
 function change_track(element)
 {
     let track = element.value;
-    track = global_data.results.tracking_list[track];
+    track = global_data.results.created.tracking_list[track];
     let min = new Date(track.timestamp);
     let max = new Date();
 
@@ -613,12 +629,15 @@ function update_track(action) {
 
 // * --- balance script --- * : BEGIN
 
+// Auflistung der Zeiten
+
 function list_balance(tracks)
 {
     tracks = JSON.parse(JSON.stringify(tracks));
     let list = date_list(tracks);
     let html = document.createElement('ul');
 
+    // Zeiten eines Jahres
     for (let keyY in list) {
         let year = document.createElement('ul');
         let head = document.createElement('h5');
@@ -627,6 +646,7 @@ function list_balance(tracks)
         year.className = 'year y-' + keyY;
         let li;
 
+        // Zeiten eines Monats
         for (let keyM in list[keyY]) {
             let month = document.createElement('ul');
             let head = document.createElement('h5');
@@ -636,6 +656,7 @@ function list_balance(tracks)
             month.className = 'month m-' + keyM;
 
 
+            // Aufsplittung eines Monats in Wochen
             let week = document.createElement('ul');
             week.className = 'week';
             li = document.createElement('li');
@@ -643,6 +664,7 @@ function list_balance(tracks)
             month.append(li);
 
             let EoW = false;
+            // Zeiten eines Tages
             for (let keyD in list[keyY][keyM]) {
 
                 let day = document.createElement('ul');
@@ -675,6 +697,15 @@ function list_balance(tracks)
                 li.append(day);
                 week.append(li);
 
+                // wenn das Ende der woche erreicht ist, wird die Woche abgeschlosen
+                // die Woche wird der Liste hinzugefügt und eine neue Woche wird erstellt
+                // ein problem besteht jedoch, da an samstagen selten gearbeitet wird
+                // wurden diese nicht in die Bedingung aufgenommen, da auf den Samstag
+                // nicht gewartet werden kann.....
+                // Was natürlich, auch ein problem ist. Da man seine Woche auch früher
+                // als der Freitag beenden kann.
+                // das ergibt dann wiederum aber nur einen Fehler in der Optik.
+                // Die Funktionalität wird nicht beeinträchtigt
                 if (EoW) {
                     week = document.createElement('ul');
                     week.className = 'week';
@@ -695,6 +726,8 @@ function list_balance(tracks)
     $('.balance .tracking-list').html(html);
 }
 
+// Auflistung der aufgezeichneten Monate im Select-Feld
+// für die Auswahl der zu im PDF zu dokumentierenden Monate
 function list_trackedMonths(tracks)
 {
     let list = date_list(tracks);
@@ -712,6 +745,8 @@ function list_trackedMonths(tracks)
     $('#tracked_months').html(html);
 }
 
+// Aufbauen und Berechnung der zu erstellenden Monate in der Statistik
+// für die gezeichneten Stempel
 function build_trackedTime(tracks, day)
 {
     let input = document.createElement('input');
@@ -734,6 +769,7 @@ function build_trackedTime(tracks, day)
     return set;
 }
 
+// vorbereitung der zu berechnenden Zeiten eines Tages
 function build_trackedTimeList(tracks, day) {
     let time = {};
     let counters = {
@@ -763,6 +799,7 @@ function build_trackedTimeList(tracks, day) {
     return time;
 }
 
+// berechnung der Zeiten eines Tages
 function calculate_trackedTime(time)
 {
     time.calc = {'work': 0, 'break': 0};
@@ -786,11 +823,14 @@ function calculate_trackedTime(time)
         time.calc.break += time[key].break.stop - time[key].break.start;
     }
     time.calc = time.calc.work - time.calc.break;
+
+    // umrechnung der zeit in Std, Min und Sek
     time = Object.assign(calculateTime(time, 'hours'), time);
 
     return time;
 }
 
+// berechnung der gearbeiteten Zeit eines Monats
 function calculateMonth(y, m)
 {
     let i = 0;
@@ -800,12 +840,15 @@ function calculateMonth(y, m)
         list.push(value.value);
     }
 
+    // aufsummierung der gearbeiteten Tage eines Monats
+    // src: https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce#Summe_von_Werten_in_einem_Objektarray
     return list.reduce(function(accumulate, current){
-        current = parseFloat(current);
+        current = parseInt(current);
         return isNaN(current) ? accumulate : accumulate + current;
     }, i);
 }
 
+// erstellen des hidden input elements zum aufzeichnen der gearbeiteten Monatszeit
 function build_timeMonth()
 {
     $('.balance .year').each(function() {
@@ -829,6 +872,8 @@ function build_timeMonth()
 
 // * --- document script --- * : BEGIN
 
+// abrufen der Monate und Übergabe ans Backend zur Erstellung
+// eines PDF der dafür aufgezeichneten Monate
 function create_pdf()
 {
     const months = $('#tracked_months').val();
@@ -851,6 +896,7 @@ function create_pdf()
     load_data({action: 'document', time_list: timeList, area: area});
 }
 
+// Aufbau der, für in create_pdf(), benötigten Liste
 function build_timeList(list)
 {
     let newList = {};
@@ -866,6 +912,7 @@ function build_timeList(list)
 
 // --- jquery functions ---
 
+// togglen der aufgezeichneten Tracks eines Tages
 function jquery_balance()
 {
     $('.balance h6').click(function(){

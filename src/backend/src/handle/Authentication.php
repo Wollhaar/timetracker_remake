@@ -9,7 +9,7 @@ use DavidGoraj\Helper\Controller\UserController;
 
 class Authentication
 {
-    static $userManager = null;
+    static $userManager;
     static $credentials = array();
     static $auth = null;
 
@@ -25,10 +25,7 @@ class Authentication
         }
 
         if (
-            (
-                empty(self::$credentials['username']) ||
-                empty(self::$credentials['email'])
-            ) &&
+            empty(self::$credentials['username']) &&
             empty(self::$credentials['password'])
         )
         {
@@ -42,25 +39,21 @@ class Authentication
     public static function hashPassword()
     {
         self::$credentials['password_hash'] = password_hash(self::$credentials['password'], PASSWORD_BCRYPT);
-        return self::$credentials['password_hash'];
     }
 
     public static function login(): bool
     {
         if (!empty(self::$credentials)) {
             $user = self::$credentials['username'];
-            $email = self::$credentials['email'];
             $password = self::$credentials['password'];
         }
         else return false;
 
         $userData = self::$userManager->getUser();
 
-        if (!is_null($userData) &&
-            (
-                $user == $userData->getUsername() ||
-                $email == $userData->getEmail()
-            ) &&
+        if (
+            !is_null($userData) &&
+            $user == $userData->getUsername() &&
             password_verify($password, $userData->getPasswordHash())
         )
         {

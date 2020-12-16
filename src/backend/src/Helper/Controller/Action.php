@@ -42,7 +42,7 @@ class Action
                 $admin->setData(Session::load('user'));
 
                 if (Authentication::checkAuthorization($admin))
-                    UserController::registerUser(self::$handle);
+                    self::$result['registered'] = UserController::registerUser(self::$handle);
                 break;
 
             case 'check_session':
@@ -70,7 +70,7 @@ class Action
 
                 TimeController::setUser($user);
                 self::$result['tracked'] = TimeController::newStamp(self::$handle);
-                self::$result['tracking_list'] = TimeController::getTracking('today');
+                self::$result['created']['tracking_list'] = TimeController::getTracking('today');
 
                 Session::save(array('load' => 'default'), 'action');
                 break;
@@ -80,7 +80,7 @@ class Action
                 $user->setData(Session::load('user'));
                 TimeController::setUser($user);
 
-                self::$result['tracking_list'] = TimeController::getAllTracks();
+                self::$result['created']['tracking_list'] = TimeController::getAllTracks();
                 Session::save(array_merge(
                     Session::load('action'),
                     array('load' => 'balance')
@@ -160,6 +160,6 @@ class Action
         $user->setData(Session::load('user'));
 
         TimeController::setUser($user);
-        self::$result['tracking_list'] = TimeController::getTracking('today');
+        self::$result['created']['tracking_list'] = TimeController::getTracking('today');
     }
 }

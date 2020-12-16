@@ -8,7 +8,6 @@ use DavidGoraj\Classes\Time;
 use DavidGoraj\Classes\User;
 use DavidGoraj\handle\Database;
 use DavidGoraj\handle\Session;
-use mysql_xdevapi\Exception;
 
 class TimeController
 {
@@ -23,11 +22,16 @@ class TimeController
         }
     }
 
+//    set the static user for the timecontroller
     public static function setUser(User $user)
     {
         self::$user = $user;
     }
 
+    /** insert new track to the database
+     * @param array with given data (type, start_stop, user_id)
+     * @return bool
+    */
     public static function newStamp(Array $stamp)
     {
         if (empty(self::$database_connection)) new self();
@@ -65,7 +69,6 @@ class TimeController
     {
         $user_id = self::$user->getId();
 
-        // check for deleted track
         $sql = "SELECT * FROM `user_timestamps` 
                 WHERE `id` = ? 
                 AND `user_id` = ? 
@@ -77,9 +80,8 @@ class TimeController
             $user_id
         );
         $stmt->execute();
-        $result = $stmt->get_result()->fetch_row();
 
-        return $result;
+        return $stmt->get_result()->fetch_row();
     }
 
     public static function getTracking(String $track_area)

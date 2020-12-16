@@ -43,15 +43,10 @@ class Handler
         $response->fill(self::$session, 'session');
         $response->fill(Request::getData(), 'request');
         $response->fill(Action::getResults(), 'results');
-//        $response->fill(array(
-//            'root' => $_SERVER['DOCUMENT_ROOT'],
-//            'DIR' => __DIR__,
-//        ), 'paths');
 
         if (session_status() === PHP_SESSION_ACTIVE) {
             $response->fill(Session::load('user'), 'user');
             $response->fill(Session::load('action'), 'action');
-//        $response->fill(Request::$timeManager::$tracked, 'track');
 
             if (!empty(Session::load('error')))
                 $response->fill(Session::load('error'), 'error');
