@@ -1,7 +1,7 @@
 var default_load = 'home';
 var admin = null;
-var dayInWeek = [null, 'Mo','Di','Mi','Do','Fr','Sa','So'];
-var monthInYear = [null, 'Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+var dayInWeek = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+var monthInYear = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 var global_data = {};
 
 $(document).ready(function () {
@@ -135,7 +135,8 @@ function content_ready()
     if (data.search('balance') !== -1) {
         let tracking_list = JSON.parse(JSON.stringify(global_data.results.created.tracking_list));
         if (tracking_list) {
-            list_balance(tracking_list);
+            build_balanceList(tracking_list);
+            list_balanceTracks(tracking_list);
             list_trackedMonths(tracking_list);
 
             build_timeMonth();
@@ -283,7 +284,7 @@ function date_list(tracks)
     for (let value of Object.values(tracks)) {
         let date = new Date(value.timestamp);
         let y = date.getFullYear();
-        let m = date.getMonth() + 1;
+        let m = date.getMonth();
         let d = date.getDate();
 
         if (list[y] === undefined) list[y] = [];
@@ -296,42 +297,35 @@ function date_list(tracks)
     return list;
 }
 
-function endOfWeek(day)
+function lastDayOfMonth(month, date)
 {
-    return day >= 5;
-}
-
-function endOfMonth(day, date)
-{
-    switch (date.getMonth()) {
+    switch (month) {
         // source: https://stackoverrun.com/de/q/4444865
 
         case 2:
-            if (day >= 28) {
-                let year = date.getFullYear();
-                return !(day !== 29 &&
-                    ((year % 4 === 0) &&
-                        (year % 100 !== 0)) ||
-                    (year % 400 === 0));
-            }
-            break;
+            let year = date.getFullYear();
+            let day = 28;
+            if (((year % 4 === 0) &&
+                (year % 100 !== 0)) ||
+                (year % 400 === 0))
+                day = 29;
+            return day;
+
         case 1:
         case 3:
         case 5:
         case 7:
         case 8:
         case 10:
-
         case 12:
-            if (day === 31) return true;
-            break;
+            return 31;
+
         case 4:
         case 6:
         case 9:
 
         case 11:
-            if (day === 30) return true;
-        break;
+            return 30;
         default:
             return false;
     }
@@ -356,8 +350,8 @@ function hide_user()
     $('#logout-link').attr('class', 'd-none');
 }
 
-
 // --- content script --- : BEGIN
+
 
 function update_title(content)
 {
@@ -387,6 +381,7 @@ function fill_form_element_with(data, which)
 
 // korrektur der höhe des wrappers
 // src: https://stackoverflow.com/questions/324486/how-do-you-read-css-rule-values-with-javascript
+
 function adjust_wrapper()
 {
     let wrapper = $('.wrapper');
@@ -398,7 +393,6 @@ function adjust_wrapper()
         $(wrapper).css('margin-bottom', margin_bottom);
     }
 }
-
 // coded from(src): https://stackoverflow.com/questions/16965515/how-to-get-a-style-attribute-from-a-css-class-by-javascript-jquery
 function getStyledCSSRules(what, style)
 {
@@ -439,7 +433,6 @@ function check_user_status()
     load_data(data);
 }
 
-
 function login()
 {
     var login_input = $('.login-area input');
@@ -447,6 +440,7 @@ function login()
 
     load_data(data);
 }
+
 
 // setzen der daten des eingeloggten user im frontend
 function logged_in()
@@ -495,7 +489,6 @@ function dayGotSet(dayElement, day) {
     });
 }
 
-
 // Aufbau eines Stempels für die Stempelliste
 function build_trackDisplay(track)
 {
@@ -503,6 +496,7 @@ function build_trackDisplay(track)
         capitalize(track['start_stop']) + ' ' +
         track['timestamp'];
 }
+
 
 function work(start_stop)
 {
@@ -588,6 +582,7 @@ function fill_tracking_list(tracks)
 
 // aufsetzen des zu ändernden Stempels
 // src: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local
+
 function change_track(element)
 {
     let track = element.value;
@@ -610,7 +605,6 @@ function change_track(element)
     timeElement.attr('min', min);
     timeElement.attr('max', max);
 }
-
 function split___type__start_stop(data)
 {
     data = data.split(' ');
@@ -629,105 +623,171 @@ function update_track(action) {
 
 // * --- balance script --- * : BEGIN
 
-// Auflistung der Zeiten
-
-function list_balance(tracks)
+function buildYear(year)
 {
+    let yearElement = document.createElement('ul');
+
+    // Bau eines Jahres
+    let dateObj = new Date();
+    dateObj.setFullYear(year);
+
+    let head = document.createElement('h5');
+    head.innerHTML = 'Jahr ' + year;
+
+    yearElement.append(head);
+    yearElement.className = 'year y-' + year;
+
+    // building a month
+    for (let i = 0; i < 12; i++) {
+        dateObj.setMonth(i);
+        let month = buildMonth(dateObj);
+
+        let li = document.createElement('li');
+        li.append(month);
+
+        yearElement.append(li);
+    }
+
+    return yearElement;
+}
+
+
+// Auflistung der Zeiten
+function build_balanceList(tracks) {
     tracks = JSON.parse(JSON.stringify(tracks));
     let list = date_list(tracks);
     let html = document.createElement('ul');
 
-    // Zeiten eines Jahres
-    for (let keyY in list) {
-        let year = document.createElement('ul');
-        let head = document.createElement('h5');
-        head.innerHTML = 'Jahr ' + keyY;
-        year.append(head);
-        year.className = 'year y-' + keyY;
-        let li;
-
-        // Zeiten eines Monats
-        for (let keyM in list[keyY]) {
-            let month = document.createElement('ul');
-            let head = document.createElement('h5');
-
-            head.innerHTML = 'Monat ' + monthInYear[keyM];
-            month.append(head);
-            month.className = 'month m-' + keyM;
-
-
-            // Aufsplittung eines Monats in Wochen
-            let week = document.createElement('ul');
-            week.className = 'week';
-            li = document.createElement('li');
-            li.append(week);
-            month.append(li);
-
-            let EoW = false;
-            // Zeiten eines Tages
-            for (let keyD in list[keyY][keyM]) {
-
-                let day = document.createElement('ul');
-                for (let keyT in list[keyY][keyM][keyD]) {
-                    let date = list[keyY][keyM][keyD][keyT];
-
-                    let diW = dayInWeek[date.getDay()];
-                    let diM = date.getDate();
-
-                    let track = document.createElement('li');
-
-                    track.id = 't-' + tracks[keyT].id;
-                    track.innerHTML = build_trackDisplay(tracks[keyT]);
-
-                    if(!day.head) {
-                        let dayHead = document.createElement('h6');
-                        let header = diW + ' ' + diM;
-                        let trackedDayTime = build_trackedTime(tracks, list[keyY][keyM][keyD]);
-
-                        dayHead.append(header);
-                        day.append(dayHead);
-                        day.append(trackedDayTime);
-                        day.head = true;
-                    }
-                    day.append(track);
-
-                    EoW = endOfWeek(dayInWeek.indexOf(diW));
-                }
-                li = document.createElement('li');
-                li.append(day);
-                week.append(li);
-
-                // wenn das Ende der woche erreicht ist, wird die Woche abgeschlosen
-                // die Woche wird der Liste hinzugefügt und eine neue Woche wird erstellt
-                // ein problem besteht jedoch, da an samstagen selten gearbeitet wird
-                // wurden diese nicht in die Bedingung aufgenommen, da auf den Samstag
-                // nicht gewartet werden kann.....
-                // Was natürlich, auch ein problem ist. Da man seine Woche auch früher
-                // als der Freitag beenden kann.
-                // das ergibt dann wiederum aber nur einen Fehler in der Optik.
-                // Die Funktionalität wird nicht beeinträchtigt
-                if (EoW) {
-                    week = document.createElement('ul');
-                    week.className = 'week';
-                    li = document.createElement('li');
-                    li.append(week);
-                    month.append(li);
-                }
-            }
-            li = document.createElement('li');
-            li.append(month);
-            year.append(li);
-        }
-        li = document.createElement('li');
-        li.append(year);
+    for (let year in list) {
+        let li = document.createElement('li');
+        li.append(buildYear(year));
         html.append(li);
     }
 
     $('.balance .tracking-list').html(html);
 }
 
+
+function build_balanceList_copy(tracks) {
+    tracks = JSON.parse(JSON.stringify(tracks));
+    let list = date_list(tracks);
+    let html = document.createElement('ul');
+
+    for (let year in list) {
+        let li = document.createElement('li');
+        li.append(buildYear(year));
+        html.append(li);
+    }
+
+    return html;
+}
+
+function buildMonth(date)
+{
+    let head = document.createElement('h5');
+
+    head.innerHTML = 'Monat ' + monthInYear[date.getMonth()];
+    let monthElement = document.createElement('ul');
+
+    monthElement.append(head);
+    monthElement.className = 'month _m-' + date.getMonth() + '_';
+
+    let dayInMonth = date.getDate();
+    let dayInWeek_L = date.getDay();
+    let lastDay = lastDayOfMonth(date);
+
+    do {
+        let week = buildWeek();
+        let days = countDays(dayInWeek_L);
+
+        monthElement.append(week);
+        for (let i = 1; i <= days; i++) {
+            if (i >= days) dayInWeek_L = 0;
+
+            let dayData = 'd-' + date.getFullYear() + '-' + date.getMonth() +'-' + dayInMonth;
+            let dayHead = document.createElement('h6');
+
+            dayHead.innerText =
+            dayInWeek[dayInWeek_L] + ' ' + dayInMonth;
+            $(week).find(".wd-" + dayInWeek_L).append(dayHead);
+
+            $(week).find(".wd-" + dayInWeek_L).attr('id', dayData);
+            dayInWeek_L++;
+            if (lastDay === dayInMonth++) break;
+
+        }
+        let div = document.createElement('div');
+        div.className = 'col-2';
+        monthElement.append(div);
+    } while (lastDay >= dayInMonth)
+
+    return monthElement;
+}
+
+// Bau einer Woche
+function buildWeek()
+{
+    let week = document.createElement('ul');
+    let li = document.createElement('li');
+    week.className = 'week col-7';
+
+    for (let i = 1; i < 7; i++) {
+        week.append(buildDay(i));
+    }
+    week.append(buildDay(0));
+    li.append(week);
+
+    return week;
+}
+
+function buildDay(diW)
+{
+    let day = document.createElement('ul');
+    let liD = document.createElement('li');
+    liD.className = 'col-1';
+    day.className = 'wd-' + diW;
+
+    liD.append(day);
+    return liD;
+}
+
+function countDays(day)
+{
+    if (day === 0) return 1;
+    let num = parseInt(((day - 8) + '').substr(1));
+    return isNaN(num) ? 0 : num;
+}
+
+function list_balanceTracks(tracks)
+{
+    tracks = JSON.parse(JSON.stringify(tracks));
+
+    // Zeiten eines Jahres
+    for (let key in tracks) {
+
+        let hover = document.createElement('span');
+        $(hover).attr('class', 'tracks hover-box d-none');
+
+        // Zeiten eines Tages
+        let date = tracks[key].timestamp;
+        let dayId = '#day-' + date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+
+        let day = $(dayId);
+        let track = document.createElement('li');
+
+        track.id = 't-' + tracks[key].id;
+        track.innerHTML = build_trackDisplay(tracks[key]);
+
+        let trackedDayTime = build_trackedTime(tracks, tracks[key]);
+        day.append(trackedDayTime);
+
+        hover.append(track);
+        day.append(hover);
+    }
+}
+
 // Auflistung der aufgezeichneten Monate im Select-Feld
-// für die Auswahl der zu im PDF zu dokumentierenden Monate
+// für die Auswahl der zu, in PDF, zu dokumentierenden Monate
 function list_trackedMonths(tracks)
 {
     let list = date_list(tracks);
@@ -912,18 +972,19 @@ function build_timeList(list)
 
 // --- jquery functions ---
 
-// togglen der aufgezeichneten Tracks eines Tages
 function jquery_balance()
 {
+// hover-box der aufgezeichneten Tracks eines Tages
     $('.balance h6').click(function(){
-        if ($(this).nextAll('li').css('display') === 'list-item') {
-            $(this).nextAll('li').hide();
-        }
+        let tracks = $(this).nextAll('li');
 
-        if ($(this).nextAll('li').css('display') === 'none') {
-            $(this).nextAll('li').show();
-        }
-
+    });
+    $(".balance ul.week li ul h6").on("mouseover", function(){
+        $(this).siblings(".hover-box").removeClass("d-none");
+        $(this).siblings(".hover-box").addClass("d-inline");
+    }).on("mouseleave", function(){
+        $(this).siblings(".hover-box").removeClass("d-inline");
+        $(this).siblings(".hover-box").addClass("d-none");
     });
 }
 
@@ -949,8 +1010,6 @@ $(document).ready(function () {
 
 });
 
-
-
 // --- extensions ---
 
 // --- uppercase first-letter ---
@@ -959,3 +1018,18 @@ const capitalize = (s) => {
     if (typeof s !== 'string') return ''
     return s.charAt(0).toUpperCase() + s.slice(1)
 }
+
+
+
+// --- override ---
+
+// anhand der funktion sort von Objekten
+// src: https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+const flip = (arr) => {
+    if (typeof arr !== 'object') return undefined;
+    arr = Object.keys(arr).sort(function (a, b) {
+        return b - a;
+    });
+    return arr;
+}
+

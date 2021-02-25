@@ -17,9 +17,23 @@
     padding: 0 50px;
     width: 600px;
 
+    h4 {
+      margin: 10px;
+    }
+
     #tracking_list {
-      width: 350px;
+      height: 140px;
+      width: 270px;
       margin: 0 10px;
+
+      // -- hiding scrollbar --
+      // -- firefox --
+      scrollbar-width: none;
+
+      // -- chrome, safari, opera --
+      ::-webkit-scrollbar {
+        display: none;
+      }
     }
   }
 

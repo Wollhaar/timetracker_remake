@@ -4,7 +4,7 @@ Header always set Access-Control-Origin-Headers "*"
 
 RewriteEngine On
 
-RewriteCond %{SERVER_PORT} !^8080$ [OR]
+#RewriteCond %{SERVER_PORT} !^8080$ [OR]
 RewriteCond %{REQUEST_URI} ^/(.?|frontend/?)$
 RewriteRule ^(.?|frontend/?)$ /frontpage.html [R=302,S=2,L]
 

@@ -3,17 +3,29 @@
     ul {
       margin-top: 10px;
       li {
-        margin: 0 5px;
+        //margin: 0 5px;
         //padding: 5px;
         list-style-type: none;
       }
     }
 
     .week {
-      margin: 20px 0;
+      margin-top: 10px;
+      //width: 250px;
 
-      h6 {cursor:pointer}
-      ul li {display: none}
+      li {
+        display: inline-grid;
+        position: relative;
+        font-size: 1.2rem;
+
+        h6 {
+          cursor: pointer
+        }
+
+        ul li {
+          //display: none
+        }
+      }
     }
   }
 
@@ -32,3 +44,25 @@
     }
   }
 }
+
+/* ANFANG hover-box */
+.hover-box {
+  min-width: 250px;
+  min-height: 30px;
+
+  position: absolute;
+  top: -90px;
+  left: -90px;
+  z-index: 10;
+
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: lighter;
+
+  background-color: white;
+  display: none;
+  border-radius: 5px;
+  border: solid 1px @header-background;
+  padding: 5px 10px;
+}
+/* ENDE hover-box */

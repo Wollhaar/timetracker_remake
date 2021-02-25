@@ -5,10 +5,12 @@
 var/
 vendor/
 src/vendor/
+src/docus/
 src/frontend/lib/
 
 # ignored files
 test*
+*.tar.gz
 
 # ignored packages
 # php
