@@ -1,7 +1,5 @@
 var default_load = 'home';
 var admin = null;
-var dayInWeek = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-var monthInYear = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 var global_data = {};
 
 $(document).ready(function () {
@@ -623,35 +621,6 @@ function update_track(action) {
 
 // * --- balance script --- * : BEGIN
 
-function buildYear(year)
-{
-    let yearElement = document.createElement('ul');
-
-    // Bau eines Jahres
-    let dateObj = new Date();
-    dateObj.setFullYear(year);
-
-    let head = document.createElement('h5');
-    head.innerHTML = 'Jahr ' + year;
-
-    yearElement.append(head);
-    yearElement.className = 'year y-' + year;
-
-    // building a month
-    for (let i = 0; i < 12; i++) {
-        dateObj.setMonth(i);
-        let month = buildMonth(dateObj);
-
-        let li = document.createElement('li');
-        li.append(month);
-
-        yearElement.append(li);
-    }
-
-    return yearElement;
-}
-
-
 // Auflistung der Zeiten
 function build_balanceList(tracks) {
     tracks = JSON.parse(JSON.stringify(tracks));
@@ -680,82 +649,6 @@ function build_balanceList_copy(tracks) {
     }
 
     return html;
-}
-
-function buildMonth(date)
-{
-    let head = document.createElement('h5');
-
-    head.innerHTML = 'Monat ' + monthInYear[date.getMonth()];
-    let monthElement = document.createElement('ul');
-
-    monthElement.append(head);
-    monthElement.className = 'month _m-' + date.getMonth() + '_';
-
-    let dayInMonth = date.getDate();
-    let dayInWeek_L = date.getDay();
-    let lastDay = lastDayOfMonth(date);
-
-    do {
-        let week = buildWeek();
-        let days = countDays(dayInWeek_L);
-
-        monthElement.append(week);
-        for (let i = 1; i <= days; i++) {
-            if (i >= days) dayInWeek_L = 0;
-
-            let dayData = 'd-' + date.getFullYear() + '-' + date.getMonth() +'-' + dayInMonth;
-            let dayHead = document.createElement('h6');
-
-            dayHead.innerText =
-            dayInWeek[dayInWeek_L] + ' ' + dayInMonth;
-            $(week).find(".wd-" + dayInWeek_L).append(dayHead);
-
-            $(week).find(".wd-" + dayInWeek_L).attr('id', dayData);
-            dayInWeek_L++;
-            if (lastDay === dayInMonth++) break;
-
-        }
-        let div = document.createElement('div');
-        div.className = 'col-2';
-        monthElement.append(div);
-    } while (lastDay >= dayInMonth)
-
-    return monthElement;
-}
-
-// Bau einer Woche
-function buildWeek()
-{
-    let week = document.createElement('ul');
-    let li = document.createElement('li');
-    week.className = 'week col-7';
-
-    for (let i = 1; i < 7; i++) {
-        week.append(buildDay(i));
-    }
-    week.append(buildDay(0));
-    li.append(week);
-
-    return week;
-}
-
-function buildDay(diW)
-{
-    let day = document.createElement('ul');
-    let liD = document.createElement('li');
-    liD.className = 'col-1';
-    day.className = 'wd-' + diW;
-
-    liD.append(day);
-    return liD;
-}
-
-function countDays(day)
-{
-    if (day === 0) return 1;
-    let num = parseInt(((day - 8) + '').substr(1));
-    return isNaN(num) ? 0 : num;
 }
 
 function list_balanceTracks(tracks)
