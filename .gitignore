@@ -10,7 +10,11 @@ src/frontend/lib/
 
 # ignored files
 test*
+*.pdf
 *.tar.gz
+
+# special
+notfound.php
 
 # ignored packages
 # php
