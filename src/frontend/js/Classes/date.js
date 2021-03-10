@@ -85,4 +85,57 @@ let daysOfWeek = ['So','Mo','Di','Mi','Do','Fr','Sa'];
 let monthInYear = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
 
+// aufbau der aufgezeichneten Stempel in einer (nach [Jahr][Monat][Tag] sortiert) Liste
 
+function date_list(tracks)
+{
+    let list = {};
+    for (let value of Object.values(tracks)) {
+        let date = new Date(value.timestamp);
+        let y = date.getFullYear();
+        let m = date.getMonth();
+        let d = date.getDate();
+
+        if (list[y] === undefined) list[y] = [];
+        if (list[y][m] === undefined) list[y][m] = [];
+        if (list[y][m][d] === undefined) list[y][m][d] = [];
+
+        list[y][m][d][value.id] = date;
+    }
+
+    return list;
+}
+
+function lastDayOfMonth(month, date)
+{
+    switch (month) {
+        // source: https://stackoverrun.com/de/q/4444865
+
+        case 2:
+            let year = date.getFullYear();
+            let day = 28;
+            if (((year % 4 === 0) &&
+                (year % 100 !== 0)) ||
+                (year % 400 === 0))
+                day = 29;
+            return day;
+
+        case 1:
+        case 3:
+        case 5:
+        case 7:
+        case 8:
+        case 10:
+        case 12:
+            return 31;
+
+        case 4:
+        case 6:
+        case 9:
+
+        case 11:
+            return 30;
+        default:
+            return false;
+    }
+}

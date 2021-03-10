@@ -1,12 +1,28 @@
 class Calendar {
-    elements = Array();
+    elements = Object;
+    years = Array();
 
     constructor() {
-        this.elements.push(this.create('ul', 'calendar'));
+        this.push(this.create('ul', 'calendar'));
+    }
+
+    push(element) {
+        this.elements.assign(element);
     }
 
     create(tName, cName) {
         return new Element(tName, cName);
+    }
+
+    pushYear(year) {
+        this.years.push(year);
+    }
+
+    createDates() {
+        let calendar = Object();
+        for (let year in this.years) {
+            calendar[year] = new Year(year);
+        }
     }
 
     build(timeElement, headName, time) {
@@ -14,7 +30,6 @@ class Calendar {
 
         if (timeElement === 'year') {
             let head = this.create('h5'); // TODO: Title for Year, Month, Day
-            head.innerHTML = + headName + ' ' + time;
         }
         else if (timeElement === 'month') {
             let head = this.create('h5'); // TODO: Title for Year, Month, Day
@@ -32,48 +47,122 @@ class Calendar {
         return element;
     }
 
-    addClass(className) {
-        this.className = className; // TODO: outsourcing in another class for own Objects
+    buildIntoCalender() {
+
     }
 
-    buildYear(year) {
+
+
+
+
+
+    countDays(day) {
+        if (day === 0) return 1;
+        let num = parseInt(((day - 8) + '').substr(1));
+        return isNaN(num) ? 0 : num;
+    }
+}
+
+class Element {
+    element;
+
+    constructor(tName, cName = null) {
+        this.element = document.createElement(tName);
+        element.addClass(cName)
+    }
+
+    create(tName, cName) {
+        return new Element(tName, cName);
+    }
+
+    get() {
+        return this.element;
+    }
+
+    add(names) {
+        for (let cName of names)
+            this.element.addClass(cName);
+    }
+
+    set(attr, value) {
+        this.element.attr(attr, value);
+    }
+
+    fill(content) {
+        this.element.html(content);
+    }
+
+    buildHead(head, content) {
+        head.innerText =  content.title + ' ' + content.value;
+    }
+}
+
+class YearElement extends Element{
+    headElement = super.create('h5');
+    head_content = {
+        title: 'Jahr',
+        value: null
+    };
+
+    constructor(tName, cName, year) {
+        super(tName, cName);
+        this.head_content.value = year;
+    }
+
+    build(year) {
         // Bau eines Jahres
-        let yearElement = this.build('year', 'Jahr', year);
+        let yearElement = super.create('ul', 'year');
+        yearElement.buildHead(this.headElement, this.head_content);
         let dateObj = new Year(year);
 
 
         // building a month
         for (let i = 0; i < 12; i++) {
             dateObj.setMonth(i);
-            let month = this.buildMonth(dateObj);
+            let monthElement = new MonthElement(dateObj);
+            monthElement.build(i, dateObj.getFullYear());
 
-            let li = this.create('li');
-            li.append(month);
+            let li = new Element('li');
+            li.append(monthElement);
 
             // yearElement.append(li);
         }
 
         return yearElement;
     }
+}
 
+class MonthElement extends Element {
+    headElement = 'h5';
+    head_content = {
+        title: 'Monat',
+        value: null
+    };
 
-    buildMonth(date) {
-        let monthElement = this.build('month', 'Monat' + date.getMonth());
+    constructor(tName, cName, month) {
+        super(tName, cName);
+        this.head_content.value = month;
+    }
+
+    build(month, year) {
+        super.buildHead(this.headElement, this.head_content);
+        let date = new Date();
 
         let dayInMonth = date.getDate();
         let dayInWeek_L = date.getDay();
         let lastDay = lastDayOfMonth(date);
 
         do {
-            let week = this.buildWeek();
+            let weekElement = new WeekElement('ul', 'week');
+            let week = weekElement.build();
             let days = this.countDays(dayInWeek_L);
 
-            monthElement.append(week);
+            super.element.append(week);
             for (let i = 1; i <= days; i++) {
                 if (i >= days) dayInWeek_L = 0;
 
-                let dayData = 'd-' + date.getFullYear() + '-' + date.getMonth() + '-' + dayInMonth;
-                let dayHead = document.createElement('h6');
+                let dayData = 'd-' + date.getFullYear() + '_' + date.getMonth() + '_' + dayInMonth;
+                let dayHead = new Element('h6', 'head');
 
                 dayHead.innerText =
                     dayInWeek[dayInWeek_L] + ' ' + dayInMonth;
@@ -91,46 +180,64 @@ class Calendar {
 
         return monthElement;
     }
+}
 
-// Bau einer Woche
-    buildWeek() {
-        let week = document.createElement('ul');
-        let li = document.createElement('li');
+class WeekElement extends Element {
+    headElement = 'h5';
+    head_content = {
+        title: 'KW',
+        value: null
+    };
+
+    constructor(tName, cName, KW = null) {
+        super(tName, cName);
+        this.head_content.value = KW;
+    }
+
+    // Bau einer Woche
+    build() {
+        let week = super.create('ul');
+        let li = super.create('li');
         week.className = 'week col-7';
 
         for (let i = 1; i < 7; i++) {
-            week.append(this.buildDay(i));
+            week.append(new DayElement('ul','day', i));
         }
-        week.append(this.buildDay(0));
+        week.append(new DayElement('ul', 'day',0));
         li.append(week);
 
         return week;
     }
+}
 
-    buildDay() {
-        let day = document.createElement('ul');
-        let liD = document.createElement('li');
-        liD.className = 'col-1';
-        day.className = 'wd-' + this.dayInWeek;
+class DayElement extends Element{
+    headElement = super.create('h6');
+    head_content = {
+        title: null,
+        value: null
+    };
 
-        liD.append(day);
-        return liD;
+    constructor(tName, cName, dayInMonth) {
+        super(tName, cName);
+        this.head_content.value = dayInMonth;
     }
 
-    countDays(day) {
-        if (day === 0) return 1;
-        let num = parseInt(((day - 8) + '').substr(1));
-        return isNaN(num) ? 0 : num;
+    setHead(value, what) {
+        this.head_content[what] = daysOfWeek[value];
+    }
+
+    build() {
+        let li = new Element('li');
+        li.add('col-1');
+
+        super.buildHead(this.headElement, this.head_content)
+        super.add('wd-' + this.dayInWeek);
+
+        li.append(this.element);
+
+        return li;
     }
 }
 
-class Element {
-    element;
-
-    constructor(tName, cName) {
-        this.element = document.createElement(tName);
-        element.addClass(cName)
-        return element;
-    }
-
-}
+let daysOfWeek = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+let monthInYear = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
