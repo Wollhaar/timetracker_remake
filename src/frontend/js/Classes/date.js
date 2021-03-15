@@ -1,34 +1,57 @@
 class Year {
     stamp = new Date();
     timeElements = Array();
-    className = Array('year');
+    weeks = Array(1);
 
     constructor(year) {
         this.stamp.setFullYear(year);
         this.build();
     }
 
-    set(month) {
-        this.timeElements.push(month);
+    add(value, what) {
+        this[what].push(value);
+    }
+
+    get(what) {
+        return this[what];
+    }
+
+    addToWeek(day) {
+        let w = day.stamp.prototype.getWeekNumber();
+
+        if (this.weeks[w] !== 'object') {
+            this.weeks[w] = new Week();
+            this.weeks[w].setKW(w);
+        }
+
+        this.weeks[w].set(day);
     }
 
     build() {
         for (let i = 0; i < 12; i++) {
-            this.set(new Month(
+            this.add(new Month(
                     i, this.stamp.getFullYear()
-                ));
+                ), 'timeElements');
+        }
+    }
+
+    buildWeeks() {
+        for (let month of this.timeElements) {
+            for (let day of month.timeElements) {
+                this.addToWeek(day);
+            }
         }
     }
 }
 
 class Month {
     stamp = new Date();
-    timeElements = Array();
-    name;
+    timeElements = Array(1);
+    value;
 
     constructor(month, year) {
         this.stamp.setFullYear(year, month);
-        this.name = monthInYear[month];
+        this.value = month;
         this.build();
     }
 
@@ -47,7 +70,13 @@ class Month {
 
 class Week {
     KW;
+    stamp;
     timeElements = Array();
+
+    constructor(week = null) {
+        this.stamp = week;
+        if (week instanceof Date) this.setKW(week.getWeekNumber())
+    }
 
     setKW(KW) {
         this.KW = KW;
@@ -56,33 +85,17 @@ class Week {
     set(day) {
         this.timeElements.push(day);
     }
-
-    build() {
-        let day = document.createElement('ul');
-        let liD = document.createElement('li');
-        liD.className = 'col-1';
-        day.className = 'wd-' + this.dayInWeek;
-
-        liD.append(day);
-        return liD;
-    }
 }
 
 class Day {
     stamp = new Date();
     dayInWeek;
-    name;
 
     constructor(day, month, year) {
         this.stamp.setFullYear(year, month, day);
-
         this.dayInWeek = this.stamp.getDay();
-        this.name = daysOfWeek[this.dayInWeek];
     }
 }
-
-let daysOfWeek = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-let monthInYear = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
 
 // aufbau der aufgezeichneten Stempel in einer (nach [Jahr][Monat][Tag] sortiert) Liste
@@ -139,3 +152,15 @@ function lastDayOfMonth(month, date)
             return false;
     }
 }
+
+
+// extension --- scripted prototype
+
+// src: https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
+Date.prototype.getWeekNumber = function(){
+    var d = new Date(Date.UTC(this.getFullYear(), this.getMonth(), this.getDate()));
+    var dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1)/7)
+};
