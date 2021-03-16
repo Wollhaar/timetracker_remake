@@ -1,17 +1,8 @@
-class Calendar {
-    elements = Object;
+class Calendar extends Element {
     years = Array();
 
     constructor() {
-        this.push(this.create('ul', 'calendar'));
-    }
-
-    push(element) {
-        this.elements.assign(element);
-    }
-
-    create(tName, cName) {
-        return new Element(tName, cName);
+        super('ul', 'calendar');
     }
 
     pushYear(year) {
@@ -20,44 +11,34 @@ class Calendar {
 
     createDates() {
         let calendar = Object();
-        for (let year in this.years)
+        for (let year in this.years) {
             calendar[year] = new Year(year);
+            calendar[year].buildWeeks();
+        }
 
         this.years = calendar;
     }
 
     build() {
-        for (let year of this.years.timeElements) {
-            let listElement = this.create('li');
+        for (let year of Object.values(this.years)) {
+            let listElement = new Element('li');
             let yrElement = new YearElement(year);
 
-            listElement.append(yrElement);
+            listElement.push(yrElement);
             this.push(listElement);
 
+            let weeks = year.get('weeks');
             for (let month of year.timeElements) {
-                listElement = this.create('li');
+                listElement = new Element('li');
                 let mthElement = new MonthElement(month);
 
-                listElement.append(mthElement);
+                listElement.push(mthElement);
                 yrElement.push(listElement);
 
-                this.years.buildWeeks();
-                let weeks = this.years.get('weeks');
-                let wkElement = new WeekElement(weeks[month.stamp.getWeekNumber()]);
-                for (let day of month.timeElements) {
-                    listElement = this.create('li');
-                    listElement.append(wkElement);
-
-                    let dyElement = new DayElement(day);
-                    listElement = this.create('li');
-                    listElement.append(dyElement);
-                    wkElement.push(listElement);
-
-                    if (this.check(day.stamp)) {
-                        listElement.append(mthElement);
-                        listElement = this.create('li');
-                        wkElement = new WeekElement(weeks[day.stamp.getWeekNumber()]);
-                    }
+                for (let week of Object.values(weeks.timeElements)) { // building a year at calendar only on weeks ?
+                    let wkElement = new WeekElement(week);
+                    listElement = new Element('li');
+                    listElement.push(wkElement);
                 }
             }
         }
@@ -66,44 +47,12 @@ class Calendar {
     check(day) {
         return day.getDay() === 0;
     }
-}
 
-class Element {
-    element;
-    classes = Array();
-
-    constructor(tName, cName = null) {
-        this.element = document.createElement(tName);
-        this.classes.add(Array(cName))
-    }
-
-    create(tName, cName) {
-        return new Element(tName, cName);
-    }
-
-    get() {
-        return this.element;
-    }
-
-    add(names) {
-        for (let cName of names)
-            this.classes.push(cName);
-    }
-
-    set(attr, value) {
-        this.element.attr(attr, value);
-    }
-
-    push(element) {
-        this.element.append(element.get());
-    }
-
-    fill(content) {
-        this.element.html(content);
-    }
-
-    buildHead(head, content) {
-        head.innerText =  content.title + ' ' + content.value;
+    test() {
+        this.pushYear(2020);
+        this.pushYear(2021);
+        this.createDates();
+        this.build();
     }
 }
 
@@ -163,31 +112,49 @@ class WeekElement extends Element {
 
         if (week instanceof Week) {
             this.weekObj = week;
-
-            if (week.stamp)
-                this.head_content.value = week.stamp.getWeekNumber();
+            this.head_content.value = week.KW;
+            this.build();
         }
     }
 
     build() {
         super.add(Array('week', 'col-7'));
+
+        for (let day of Object.values(this.weekObj.timeElements)) {
+            let dyElement = new DayElement(day);
+            this.push(dyElement);
+        }
+        this.move();
+
         if (this.head_content.value)
             this.buildHead(this.headElement, this.head_content);
     }
 
     push(day) {
-        this.element.append(day.get());
-        if (this.check(this.element)) this.complete();
+        let listElement = new Element('li');
+        listElement.push(day);
+        super.push(listElement);
+        // if (this.check(this.element)) this.complete();
     }
 
     check(element) {
         return element.children.length === 7;
     }
 
+    move() {
+        let element = $(this.element).find('.wd-0').parent();
+        $(element).detach();
+        super.push(element);
+    }
+
     complete() {
-        let div = document.createElement('div');
-        div.className = 'col-2';
-        super.append(div);
+        let div = new Element('div');
+        div.add('col-2');
+
+        let content = Object(this);
+        super.empty();
+        super.push(content);
+        super.push(div);
     }
 }
 

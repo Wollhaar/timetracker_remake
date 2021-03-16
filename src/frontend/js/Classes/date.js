@@ -17,12 +17,10 @@ class Year {
     }
 
     addToWeek(day) {
-        let w = day.stamp.prototype.getWeekNumber();
+        let w = day.stamp.getWeekNumber();
 
-        if (this.weeks[w] !== 'object') {
-            this.weeks[w] = new Week();
-            this.weeks[w].setKW(w);
-        }
+        if (!(this.weeks[w] instanceof Week))
+            this.weeks[w] = new Week(day.stamp);
 
         this.weeks[w].set(day);
     }
@@ -37,7 +35,7 @@ class Year {
 
     buildWeeks() {
         for (let month of this.timeElements) {
-            for (let day of month.timeElements) {
+            for (let day of Object.values(month.timeElements)) {
                 this.addToWeek(day);
             }
         }
@@ -60,7 +58,7 @@ class Month {
     }
 
     build() {
-        for (let i = 1; i <= lastDayOfMonth(this.stamp.getMonth, this.stamp); i++) {
+        for (let i = 1; i <= lastDayOfMonth(this.stamp); i++) {
             this.set(new Day(
                 i, this.stamp.getMonth(), this.stamp.getFullYear()
             ));
@@ -119,12 +117,28 @@ function date_list(tracks)
     return list;
 }
 
-function lastDayOfMonth(month, date)
+
+// aufbau der jahre, der aufgezeichneten Stempel, in einer Liste
+
+function list_years(tracks)
 {
-    switch (month) {
+    let list = [];
+    for (let value of Object.values(tracks)) {
+        let date = new Date(value.timestamp);
+        let y = date.getFullYear();
+
+        list.push(y);
+    }
+
+    return list;
+}
+
+function lastDayOfMonth(date)
+{
+    switch (date.getMonth()) {
         // source: https://stackoverrun.com/de/q/4444865
 
-        case 2:
+        case 1:
             let year = date.getFullYear();
             let day = 28;
             if (((year % 4 === 0) &&
@@ -133,20 +147,20 @@ function lastDayOfMonth(month, date)
                 day = 29;
             return day;
 
-        case 1:
-        case 3:
-        case 5:
-        case 7:
-        case 8:
-        case 10:
-        case 12:
-            return 31;
-
+        case 0:
+        case 2:
         case 4:
         case 6:
+        case 7:
         case 9:
-
         case 11:
+            return 31;
+
+        case 3:
+        case 5:
+        case 8:
+
+        case 10:
             return 30;
         default:
             return false;

@@ -131,6 +131,9 @@ function content_ready()
 
     // datenbefüllung der Bilanz
     if (data.search('balance') !== -1) {
+        // initialize_script('Calendar');
+        // initialize_script('date');
+
         let tracking_list = JSON.parse(JSON.stringify(global_data.results.created.tracking_list));
         if (tracking_list) {
             build_balanceList(tracking_list);
@@ -197,6 +200,11 @@ function call_error(error)
     console.log(error);
 }
 
+function initialize_script(name) {
+    $.getScript("/js/Classes/" + name + ".js", function() {
+        alert('loaded script and content');
+    });
+}
 
 // --- link-load script --- : BEGIN
 
@@ -566,31 +574,30 @@ function update_track(action) {
 // Auflistung der Zeiten
 function build_balanceList(tracks) {
     tracks = JSON.parse(JSON.stringify(tracks));
-    let list = date_list(tracks);
-    let html = document.createElement('ul');
+    let list = list_years(tracks);
+    let calendar = new Calendar();
 
-    for (let year in list) {
-        let li = document.createElement('li');
-        li.append(buildYear(year));
-        html.append(li);
+    for (let year of list) {
+        calendar.pushYear(year);
     }
 
-    $('.balance .tracking-list').html(html);
+    calendar.createDates();
+    calendar.build();
+    $('.balance .tracking-list').html(calendar.get());
 }
 
 
-function build_balanceList_copy(tracks) {
+function build_balanceList_test(tracks) {
     tracks = JSON.parse(JSON.stringify(tracks));
-    let list = date_list(tracks);
-    let html = document.createElement('ul');
+    let list = list_years(tracks);
+    let calendar = new Calendar();
 
-    for (let year in list) {
-        let li = document.createElement('li');
-        li.append(buildYear(year));
-        html.append(li);
+    for (let year of list) {
+        calendar.pushYear(year);
     }
-
-    return html;
+    calendar.createDates();
+    calendar.build();
+    return calendar
 }
 
 function list_balanceTracks(tracks)
