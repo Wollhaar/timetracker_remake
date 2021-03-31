@@ -11,10 +11,8 @@ class Calendar extends Element {
 
     createDates() {
         let calendar = Object();
-        for (let year in this.years) {
-            calendar[year] = new Year(year);
-            calendar[year].buildWeeks();
-        }
+        for (let year of this.years.reverse())
+            calendar[year] = new Year(year, 'weeks', true);
 
         this.years = calendar;
     }
@@ -26,21 +24,13 @@ class Calendar extends Element {
 
             listElement.push(yrElement);
             this.push(listElement);
+            for (let week of Object.values(year.get('weeks'))) {
 
-            let weeks = year.get('weeks');
-            for (let month of year.timeElements) {
+                let wkElement = new WeekElement(week);
                 listElement = new Element('li');
-                let mthElement = new MonthElement(month);
-
-                listElement.push(mthElement);
-                yrElement.push(listElement);
-
-                for (let week of Object.values(weeks.timeElements)) { // building a year at calendar only on weeks ?
-                    let wkElement = new WeekElement(week);
-                    listElement = new Element('li');
-                    listElement.push(wkElement);
-                }
+                listElement.push(wkElement);
             }
+            this.push(listElement);
         }
     }
 

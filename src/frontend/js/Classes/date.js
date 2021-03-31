@@ -1,87 +1,200 @@
 class Year {
     stamp = new Date();
-    timeElements = Array();
-    weeks = Array(1);
+    timeElements = {
+        months: Array(),
+        weeks: Array()
+    };
+    conditions = {
+        months: {
+            reverse: false,
+            number: 12,
+        },
+        weeks: {
+            reverse: false,
+            number: null,
+        }
+    };
 
-    constructor(year) {
-        this.stamp.setFullYear(year);
-        this.build();
+    constructor(year = null, build = 'months', reverse = false) {
+        this.set(year);
+        this.adjust({reverse, build});
+        this.build(build);
+    }
+
+    set(year) {
+        if (!year) year = this.stamp.getFullYear();
+
+        this.value = year;
+        this.stamp.setFullYear(year, 0, 1);
+    }
+
+    adjust(settings) {
+        if (settings.build === 'months') settings.number = 12;
+        else if (settings.build === 'weeks') settings.number = this.stamp.lastWeekOfYear();
+
+        this.settings(settings.build, settings.reverse, settings.number)
+    }
+
+    settings(what, reverse, number) {
+        this.conditions[what].reverse = reverse;
+        this.conditions[what].number = number;
     }
 
     add(value, what) {
-        this[what].push(value);
+        this.timeElements[what].push(value);
     }
 
     get(what) {
-        return this[what];
+        return this.timeElements[what];
     }
 
-    addToWeek(day) {
-        let w = day.stamp.getWeekNumber();
-
-        if (!(this.weeks[w] instanceof Week))
-            this.weeks[w] = new Week(day.stamp);
-
-        this.weeks[w].set(day);
+    build(what) {
+        this[what]();
     }
 
-    build() {
-        for (let i = 0; i < 12; i++) {
+    months() {
+        const conditions = this.conditions.months;
+        for (let i = 0; i < conditions.number; i++) {
             this.add(new Month(
-                    i, this.stamp.getFullYear()
-                ), 'timeElements');
+                i, this.stamp.getFullYear()
+                ), 'months');
         }
+
+        if (conditions.reverse) this.timeElements.months.reverse();
     }
 
-    buildWeeks() {
-        for (let month of this.timeElements) {
-            for (let day of Object.values(month.timeElements)) {
-                this.addToWeek(day);
-            }
+    weeks() {
+        const conditions = this.conditions.weeks;
+        for (let i = 1; i <= conditions.number; i++) {
+            this.add(new Week(
+                i, this.stamp.getFullYear()
+                ), 'weeks');
         }
+
+        if (conditions.reverse) this.timeElements.weeks.reverse();
     }
 }
 
 class Month {
     stamp = new Date();
-    timeElements = Array(1);
+    timeElements = {
+        weeks: Array(),
+        days: Array()
+    };
+    conditions = {
+        weeks: {
+            reverse: false,
+            number: null,
+            current: null
+        },
+        days: {
+            reverse: false,
+            number: null
+        }
+    };
     value;
 
-    constructor(month, year) {
-        this.stamp.setFullYear(year, month);
+    constructor(month, year, build = 'days', reverse = false) {
+        this.set(month, year);
+        this.adjust({build, reverse});
+        this.build(build);
+    }
+
+    set(month, year) {
+        if (!year) year = this.stamp.getFullYear();
+        if (!month && month < 0) month = this.stamp.getMonth();
+
         this.value = month;
-        this.build();
+        this.stamp.setFullYear(year, month, 1);
     }
 
-    set(day) {
-        this.timeElements.push(day);
-    }
-
-    build() {
-        for (let i = 1; i <= lastDayOfMonth(this.stamp); i++) {
-            this.set(new Day(
-                i, this.stamp.getMonth(), this.stamp.getFullYear()
-            ));
+    adjust(settings) {
+        if (settings.build === 'days') settings.number = this.stamp.lastDayOfMonth();
+        else if (settings.build === 'weeks') {
+            settings.number = this.stamp.lastWeekOfMonth();
+            settings.current = this.stamp.getWeekNumber();
         }
+
+        this.settings(
+            settings.build,
+            settings.reverse,
+            settings.number,
+            settings.current
+        );
+    }
+
+    settings(what, reverse, number, current = null) {
+        this.conditions[what].reverse = reverse;
+        this.conditions[what].number = number;
+        this.conditions[what].current = current;
+    }
+
+    add(day, what) {
+        this.timeElements[what].push(day);
+    }
+
+    build(what) {
+        this[what]();
+    }
+
+    days() {
+        const conditions = this.conditions.days;
+        for (let i = 1; i <= conditions.number; i++) {
+            this.add(new Day(
+                i, this.stamp.getMonth(), this.stamp.getFullYear()
+            ), 'days');
+        }
+
+        if (conditions.reverse) this.timeElements.days.reverse();
+    }
+
+    weeks() { // under construction
+        const conditions = this.conditions.weeks;
+        for (let i = conditions.current; i <= conditions.number; i++) {
+            this.add(new Week(
+                i, this.stamp.getFullYear()
+            ), 'weeks');
+        }
+
+        if (conditions.reverse) this.timeElements.weeks.reverse();
     }
 }
 
 class Week {
-    KW;
-    stamp;
+    WN;
+    stamp = new Date();
     timeElements = Array();
 
-    constructor(week = null) {
-        this.stamp = week;
-        if (week instanceof Date) this.setKW(week.getWeekNumber())
+    constructor(WN, year) {
+        // if (year === 2020) WN -= 2; // workaround: 0.6.0.4
+        this.stamp.setFullYear(year);
+        this.stamp.setWeekNumber(WN);
+        this.stamp.calcWeekTime();
+
+        this.setWN(WN);
+        this.build('days');
     }
 
-    setKW(KW) {
-        this.KW = KW;
+    setWN(WN) {
+        this.WN = WN;
     }
 
-    set(day) {
+    add(day) {
         this.timeElements.push(day);
+    }
+
+    build(what) {
+        this[what]();
+    }
+
+    days() {
+        for (let i = 0; i < 7; i++) {
+            this.add(new Day(
+                this.stamp.getDate() + i,
+                this.stamp.getMonth(),
+                this.stamp.getFullYear()
+            ));
+        }
     }
 }
 
@@ -133,13 +246,20 @@ function list_years(tracks)
     return list;
 }
 
-function lastDayOfMonth(date)
+// override --- scripted prototype
+
+
+
+// class Date
+
+
+Date.prototype.lastDayOfMonth = function()
 {
-    switch (date.getMonth()) {
+    switch (this.getMonth()) {
         // source: https://stackoverrun.com/de/q/4444865
 
         case 1:
-            let year = date.getFullYear();
+            let year = this.getFullYear();
             let day = 28;
             if (((year % 4 === 0) &&
                 (year % 100 !== 0)) ||
@@ -163,18 +283,59 @@ function lastDayOfMonth(date)
         case 10:
             return 30;
         default:
-            return false;
+            return 0;
     }
 }
 
 
+// --- week config ---
+
+Date.prototype.WN = null;
+
+Date.prototype.lastWeekOfYear = function() {
+    const d = new Date(this.getFullYear(), 11, 31);
+    return d.getWeekNumber();
+}
+
+Date.prototype.lastWeekOfMonth = function() {
+    const d = new Date(this.getFullYear(), this.getMonth(), this.lastDayOfMonth());
+    return d.getWeekNumber();
+}
+
+Date.prototype.setWeekNumber = function(WN = null) {
+    if (!WN) WN = this.getWeekNumber();
+    this.WN = WN;
+    this.setWeekTime(WN);
+};
+
+Date.prototype.setWeekTime = function(WN) {
+    const yearStart = new Date(Date.UTC(this.getFullYear(), 0, 1));
+    // console.log('calc_weektime: ' + yearStart.getTime() + WN * 7 * 86400000);
+    // console.log(new Date(yearStart.getTime() + WN * 7 * 86400000));
+    this.setTime(yearStart.getTime() + WN * 7 * 86400000);
+};
+
+Date.prototype.calcWeekTime = function() {
+    const yearStart = new Date(Date.UTC(this.getFullYear(), 0, 1));
+    console.log('WN: ' + this.getWeekNumber());
+    let workaround = 0;
+    if (yearStart.getFullYear() === 2020) workaround = 2; // workaround: 0.6.0.4
+    this.setTime(
+        yearStart.getTime() - (yearStart.getDay() - 1) * 86400000 +
+        (this.getWeekNumber() - workaround) * 7 * 86400000
+    );
+    const dayNum = this.getDay() || 7;
+    this.setDate(this.getDate() - (dayNum - 1));
+};
+
 // extension --- scripted prototype
 
 // src: https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
-Date.prototype.getWeekNumber = function(){
-    var d = new Date(Date.UTC(this.getFullYear(), this.getMonth(), this.getDate()));
-    var dayNum = d.getUTCDay() || 7;
+Date.prototype.getWeekNumber = function() {
+    const d = new Date(Date.UTC(this.getFullYear(), this.getMonth(), this.getDate()));
+    const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-    return Math.ceil((((d - yearStart) / 86400000) + 1)/7)
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    this.WN = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    return this.WN;
 };
