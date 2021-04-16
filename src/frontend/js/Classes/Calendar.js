@@ -19,18 +19,17 @@ class Calendar extends Element {
 
     build() {
         for (let year of Object.values(this.years)) {
-            let listElement = new Element('li');
             let yrElement = new YearElement(year);
 
-            listElement.push(yrElement);
-            this.push(listElement);
             for (let week of Object.values(year.get('weeks'))) {
-
                 let wkElement = new WeekElement(week);
-                listElement = new Element('li');
-                listElement.push(wkElement);
+                wkElement.build();
+                yrElement.push(wkElement);
+                yrElement.pushObj(wkElement);
             }
-            this.push(listElement);
+
+            this.push(yrElement);
+            this.pushObj(yrElement);
         }
     }
 
@@ -48,6 +47,7 @@ class Calendar extends Element {
 
 class YearElement extends Element {
     yearObj;
+    listElement = new Element('li');
     headElement = super.create('h5');
     head_content = {
         title: 'Jahr',
@@ -58,16 +58,20 @@ class YearElement extends Element {
         super('ul', 'year');
         this.head_content.value = year.stamp.getFullYear();
         this.yearObj = year;
+        this.setId('y_' + year.stamp.getFullYear());
     }
 
     build() {
         let yearElement = super.create('ul', 'year');
         yearElement.buildHead(this.headElement, this.head_content);
+        this.listElement.push(yearElement);
+        this.pushObj(yearElement);
     }
 }
 
 class MonthElement extends Element {
     monthObj;
+    listElement = new Element('li');
     headElement = super.create('h5');
     head_content = {
         title: 'Monat',
@@ -78,19 +82,23 @@ class MonthElement extends Element {
         super('ul', 'month');
         this.head_content.value = month.stamp.getMonth();
         this.monthObj = month;
-    }
-
-    build() {
-        super.buildHead(this.headElement, this.head_content);
+        this.setId('m_' + month.stamp.getMonth() + '-' + month.stamp.getFullYear());
     }
 
     buildHead(head, content) {
         head.innerText =  content.title + ' ' + monthInYear[content.value];
     }
+
+    build() {
+        super.buildHead(this.headElement, this.head_content);
+        // super.pushObj(this.get());
+        this.listElement.push(this.get());
+    }
 }
 
 class WeekElement extends Element {
     weekObj;
+    listElements = Array();
     headElement = super.create('h5');
     head_content = {
         title: 'KW',
@@ -102,29 +110,39 @@ class WeekElement extends Element {
 
         if (week instanceof Week) {
             this.weekObj = week;
-            this.head_content.value = week.KW;
+            this.head_content.value = week.WN;
+            this.setId('wn_' + week.stamp.getWeekNumber() + '-' + week.stamp.getFullYear());
             this.build();
         }
+        else this.setId('wn_' + unique());
     }
 
     build() {
         super.add(Array('week', 'col-7'));
+
+        if (this.head_content.value) {
+            this.buildHead(this.headElement, this.head_content);
+            this.fill(this.headElement);
+        }
 
         for (let day of Object.values(this.weekObj.timeElements)) {
             let dyElement = new DayElement(day);
             this.push(dyElement);
         }
         this.move();
-
-        if (this.head_content.value)
-            this.buildHead(this.headElement, this.head_content);
     }
 
     push(day) {
-        let listElement = new Element('li');
-        listElement.push(day);
-        super.push(listElement);
+        this.pushObj(day);
+        let liEl = new Element('li');
+        liEl.push(day);
+        this.listElements.push(liEl);
+        // this.listElement = new Element('li');
         // if (this.check(this.element)) this.complete();
+    }
+
+    get() {
+        return this.listElements;
     }
 
     check(element) {
@@ -150,6 +168,7 @@ class WeekElement extends Element {
 
 class DayElement extends Element{
     dayObj;
+    listElement = Array();
     headElement = super.create('h6');
     head_content = {
         title: null,
@@ -161,21 +180,26 @@ class DayElement extends Element{
         this.dayObj = day;
         this.head_content.title = day.dayInWeek;
         this.head_content.value = day.stamp.getDate();
-    }
 
-    build() {
-        this.buildHead(this.headElement, this.head_content)
-        super.add('wd-' + this.dayInWeek);
-
-        super.set('id', 'd-' +
+        super.setId('d-' +
             this.dayObj.stamp.getFullYear() + '_' +
             this.dayObj.stamp.getMonth() + '_' +
             this.dayObj.stamp.getDate()
         );
+
+        this.build();
+    }
+
+    build() {
+        this.buildHead(this.headElement, this.head_content);
+        this.fill(this.headElement);
+        console.log(this.headElement);
+        console.log(this.element);
+        super.add('wd-' + this.dayInWeek);
     }
 
     buildHead(head, content) {
-        head.innerText = daysOfWeek[content.title] + ' ' + content.value;
+        this.headElement.innerText = daysOfWeek[content.title] + ' ' + content.value;
     }
 }
 

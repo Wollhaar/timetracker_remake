@@ -166,7 +166,6 @@ class Week {
     timeElements = Array();
 
     constructor(WN, year) {
-        // if (year === 2020) WN -= 2; // workaround: 0.6.0.4
         this.stamp.setFullYear(year);
         this.stamp.setWeekNumber(WN);
         this.stamp.calcWeekTime();
@@ -310,14 +309,11 @@ Date.prototype.setWeekNumber = function(WN = null) {
 
 Date.prototype.setWeekTime = function(WN) {
     const yearStart = new Date(Date.UTC(this.getFullYear(), 0, 1));
-    // console.log('calc_weektime: ' + yearStart.getTime() + WN * 7 * 86400000);
-    // console.log(new Date(yearStart.getTime() + WN * 7 * 86400000));
     this.setTime(yearStart.getTime() + WN * 7 * 86400000);
 };
 
 Date.prototype.calcWeekTime = function() {
     const yearStart = new Date(Date.UTC(this.getFullYear(), 0, 1));
-    console.log('WN: ' + this.getWeekNumber());
     let workaround = 0;
     if (yearStart.getFullYear() === 2020) workaround = 2; // workaround: 0.6.0.4
     this.setTime(

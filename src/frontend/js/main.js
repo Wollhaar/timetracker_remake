@@ -231,6 +231,15 @@ function loadBalance()
 
 // --- link-load script --- : END
 
+// --- global script --- : BEGIN
+
+// src: https://dev.to/rahmanfadhil/how-to-generate-unique-id-in-javascript-1b13
+function unique() {
+    return Math.floor(Math.random() * 1000);
+}
+
+// --- global script --- : END
+
 // --- time script --- : BEGIN
 
 function calculateSeconds(msecs)

@@ -1,5 +1,7 @@
 class Element {
+    id;
     element;
+    obj = Object();
     classes = Array();
 
     constructor(tName, cName = null) {
@@ -11,12 +13,26 @@ class Element {
         return new Element(tName, cName);
     }
 
+    setId(id) {
+        this.id = id;
+        this.element.id = id;
+        this[id] = this.obj;
+    }
+
     get() {
         return this.element;
     }
 
     getHTML() {
         return this.element.outerHTML;
+    }
+
+    pushObj(obj) {
+        this.obj = Object.assign(this.obj, obj);
+    }
+
+    getObj() {
+        return this.obj;
     }
 
     add(names) {
@@ -34,7 +50,7 @@ class Element {
     }
 
     fill(content) {
-        this.element.innerHTML = content;
+        this.element.innerHTML = content.getHTML();
     }
 
     empty() {
