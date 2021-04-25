@@ -5,6 +5,7 @@ namespace DavidGoraj\handle;
 
 
 use DavidGoraj\Classes\User;
+use DavidGoraj\Helper\Controller\Action;
 use DavidGoraj\Helper\Controller\UserController;
 
 class Authentication
@@ -20,9 +21,7 @@ class Authentication
 
     public static function fillCredentials(Array $credentials)
     {
-        if (isset($credentials)) {
-            self::$credentials = $credentials;
-        }
+        self::$credentials = $credentials;
 
         if (
             empty(self::$credentials['username']) &&
@@ -31,30 +30,31 @@ class Authentication
         {
             throw Exception('Error:Credentials are missing');
         }
-
         self::hashPassword();
         self::$userManager->setData(self::$credentials);
     }
 
     public static function hashPassword()
     {
-        self::$credentials['password_hash'] = password_hash(self::$credentials['password'], PASSWORD_BCRYPT);
+        self::$credentials['password_hash'] =
+            hashhash(self::$credentials['password'], true) .
+            hashhash(self::$credentials['password']);
     }
 
     public static function login(): bool
     {
         if (!empty(self::$credentials)) {
             $user = self::$credentials['username'];
-            $password = self::$credentials['password'];
+            $password = self::$credentials['password_hash'];
         }
         else return false;
 
         $userData = self::$userManager->getUser();
 
         if (
-            !is_null($userData) &&
             $user == $userData->getUsername() &&
-            password_verify($password, $userData->getPasswordHash())
+                substr($password, -40) ==
+                substr($userData->getPasswordHash(), -40)
         )
         {
             self::$auth = true;
@@ -73,10 +73,7 @@ class Authentication
 
     public static function checkAuthorization(User $user): bool
     {
-        if ($user->getStatus() > COM_ADMIN) $auth = true;
-        else $auth = false;
-
-        return $auth;
+        return ($user->getStatus() >= COM_ADMIN);
     }
 
     public static final function destroy()
@@ -87,4 +84,13 @@ class Authentication
 
         Session::destroy();
     }
+}
+
+
+function hashhash(string $str, $boo = false)
+{
+    $hash = sha1($str, $boo);
+    if (max(count_chars($hash, 1) < 10)) $hash = hashhash($hash);
+
+    return $hash;
 }

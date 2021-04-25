@@ -7,7 +7,6 @@ namespace DavidGoraj\Helper\Controller;
 use DavidGoraj\Classes\User;
 use DavidGoraj\handle\Authentication;
 use DavidGoraj\handle\Database;
-use DavidGoraj\handle\Session;
 
 class UserController
 {
@@ -31,15 +30,10 @@ class UserController
 
     public static function registerUser(Array $data): bool
     {
-        if (
-            empty($data['username']) ||
-            empty($data['password']) ||
-            empty($data['email'])
-        ) {
+        if (empty($data['username']) || empty($data['password']))
             return false;
-        }
-        Authentication::fillCredentials($data);
 
+        Authentication::fillCredentials($data);
         $data = self::$user->getSummary();
         $password_hash = self::$user->getPasswordHash();
 
@@ -73,31 +67,21 @@ class UserController
             self::$user->setData($data);
             return true;
         }
-        else Session::save(array('code' => 'E111','message' => 'Register failed','data' => $data), 'error');
+        else Action::pushToResults(array('code' => 'E111','message' => 'Register failed','data' => $data), 'error');
     }
 
     public function getUser()
     {
-        if (empty(self::$user)) {
+        if (empty(self::$user))
             return 'E201:No userdata set.';
-        }
-        else {
-            $username = self::$user->getUsername();
-            $email = self::$user->getEmail();
-        }
 
-        if (isset($username)) {
-            $sql = "SELECT * FROM `users` WHERE username = ? LIMIT 1";
-        }
-        elseif (isset($email)) {
-            $sql = "SELECT * FROM `users` WHERE email = ? LIMIT 1";
-        }
+        $username = self::$user->getUsername();
+        $sql = "SELECT * FROM `users` WHERE username = ? LIMIT 1";
 
         if (!empty($sql) && is_null(self::$database_connection->connect_error)) {
-            $parameter = $username ?? $email;
 
             $stmt = self::$database_connection->prepare($sql);
-            $stmt->bind_param('i', $parameter);
+            $stmt->bind_param('s', $username);
             $stmt->execute();
 
             $res = $stmt->get_result()->fetch_assoc();
