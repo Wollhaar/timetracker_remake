@@ -50,7 +50,7 @@ class Action
                     Session::save(array ('load' => 'home'), 'action');
                     Session::save(array (), 'user');
 
-                    Session::save(array (
+                    Action::pushToResults(array (
                         'code' => 'E121',
                         'message' => 'Session not authenticated.'
                     ), 'error');
@@ -136,12 +136,17 @@ class Action
                 break;
 
             default:
-                Session::save(array(
+                Action::pushToResults(array(
                     'code' => 'E120',
                     'action' => self::$what ?? 'none',
                     'message' => 'Action got not found'
                 ), 'error');
         }
+    }
+
+    public static function pushToResults(array $values, string $what)
+    {
+        self::$result[$what] = $values;
     }
 
     public static function getResults(): array

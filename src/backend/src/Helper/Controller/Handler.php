@@ -7,6 +7,7 @@ namespace DavidGoraj\Helper\Controller;
 use DavidGoraj\handle\Response;
 use DavidGoraj\handle\Request;
 use DavidGoraj\handle\Session;
+use mysql_xdevapi\Result;
 
 class Handler
 {
@@ -47,11 +48,6 @@ class Handler
         if (session_status() === PHP_SESSION_ACTIVE) {
             $response->fill(Session::load('user'), 'user');
             $response->fill(Session::load('action'), 'action');
-
-            if (!empty(Session::load('error')))
-                $response->fill(Session::load('error'), 'error');
-            if (!empty(Session::load('debug')))
-                $response->fill(Session::load('debug'), 'debug');
         }
         $response->encode();
 
